@@ -72,24 +72,39 @@ void tuple_divide_scalar(Tuple& dividend, D divisor)
     >::impl(dividend, divisor);
 }
 
+template<class S, std::size_t N, class Tuple>
+struct tuple_2_scale_add_impl {
+    static void impl(Tuple& result,
+            const Tuple& left, S scale_left,
+            const Tuple& right, S scale_right)
+    {
+        std::get<N - 1>(result) =
+            std::get<N - 1>(left) * scale_left +
+            std::get<N - 1>(right) * scale_right;
+        tuple_2_scale_add_impl<S, N - 1, Tuple>::impl(
+                result, left, scale_left, right, scale_right);
+    }
+};
+
+template<class S, class Tuple>
+struct tuple_2_scale_add_impl<S, 0, Tuple> {
+    static void impl(Tuple&, const Tuple&, S, const Tuple&, S)
+    {
+    }
+};
+
+template<class S, class Tuple>
+Tuple tuple_2_scale_add(const Tuple& left, S scale_left,
+        const Tuple& right, S scale_right)
+{
+    Tuple result;
+    tuple_2_scale_add_impl<
+        S,
+        std::tuple_size<Tuple>::value,
+        Tuple
+    >::impl(result, left, scale_left, right, scale_right);
+    return result;
 }
-
-template<class... Params>
-using simplex =
-    typename detail::simplex_traits<std::tuple<Params...>>::simplex_type;
-
-template<class Simplex>
-typename Simplex::value_type centroid(const Simplex& spx,
-        std::size_t except_index);
-
-template<class Fn, class Simplex>
-typename Simplex::value_type nelder_mead(
-        Fn f,
-        const Simplex& initial_simplex,
-        int max_iter,
-        double ref_factor = 1.0,
-        double exp_factor = 2.0,
-        double con_factor = 0.5);
 
 template<class Simplex>
 typename Simplex::value_type centroid(const Simplex& spx,
@@ -103,6 +118,21 @@ typename Simplex::value_type centroid(const Simplex& spx,
     detail::tuple_divide_scalar(result, spx.size() - 1);
     return result;
 }
+
+}
+
+template<class... Params>
+using simplex =
+    typename detail::simplex_traits<std::tuple<Params...>>::simplex_type;
+
+template<class Fn, class Simplex>
+typename Simplex::value_type nelder_mead(
+        Fn f,
+        const Simplex& initial_simplex,
+        int max_iter,
+        double ref_factor = 1.0,
+        double exp_factor = 2.0,
+        double con_factor = 0.5);
 
 template<class Fn, class Simplex>
 typename Simplex::value_type nelder_mead(
@@ -122,13 +152,87 @@ typename Simplex::value_type nelder_mead(
     auto extrema = std::minmax_element(begin(result), end(result));
     std::size_t best = std::distance(begin(result), extrema.first),
         worst = std::distance(begin(result), extrema.second);
-    auto cent = centroid(trial_simplex, worst);
+    auto cent = detail::centroid(trial_simplex, worst);
 
-    static_cast<void>(cent);
-    static_cast<void>(max_iter);
-    static_cast<void>(ref_factor);
-    static_cast<void>(exp_factor);
-    static_cast<void>(con_factor);
+    for (int i = 0; i < max_iter; ++i) {
+        auto reflect = detail::tuple_2_scale_add(
+                cent, 1.0 + ref_factor, trial_simplex[worst], -ref_factor);
+        auto reflect_res = f(reflect);
+
+        if (reflect_res < result[best]) {
+            // reflection was better than the best, try expanding
+            auto expand = detail::tuple_2_scale_add(
+                    reflect, 1.0 + exp_factor, cent, -exp_factor);
+            auto expand_res = f(expand);
+            if (expand_res < result[best]) {
+                trial_simplex[worst] = expand;
+                result[worst] = expand_res;
+            } else {
+                trial_simplex[worst] = reflect;
+                result[worst] = reflect_res;
+            }
+
+            best = worst;
+            worst = std::distance(begin(result),
+                    std::max_element(begin(result), end(result)));
+            cent = detail::centroid(trial_simplex, worst);
+        } else {
+            auto worse = std::find_if(begin(result), end(result),
+                    [=](const decltype(reflect_res)& r) {
+                        return r > reflect_res;
+                    });
+
+            if (worse != end(result) &&
+                    std::distance(begin(result), worse) != worst) {
+                // there's somebody worse than the reflected point who is not
+                // the worst, so keep the reflected point
+                trial_simplex[worst] = reflect;
+                result[worst] = reflect_res;
+                worst = std::distance(begin(result),
+                        std::max_element(begin(result), end(result)));
+                cent = detail::centroid(trial_simplex, worst);
+            } else {
+                // the reflected point is worse than everybody, except
+                // for maybe the worst, so contract
+
+                if (worse != end(result)) {
+                    // better than the worst!
+                    trial_simplex[worst] = reflect;
+                    result[worst] = reflect_res;
+                    worst = std::distance(begin(result),
+                            std::max_element(begin(result), end(result)));
+                    cent = detail::centroid(trial_simplex, worst);
+                }
+
+                auto contract = detail::tuple_2_scale_add(
+                        trial_simplex[worst], con_factor,
+                        cent, 1.0 - con_factor);
+                auto contract_res = f(contract);
+
+                if (contract_res >= result[worst]) {
+                    // it got worse! (or no better) --- contract everything
+                    for (std::size_t i = 0; i < trial_simplex.size(); ++i)
+                        if (i != best)
+                            trial_simplex[i] = detail::tuple_2_scale_add(
+                                    trial_simplex[i], 0.5,
+                                    trial_simplex[best], 0.5);
+
+                    std::transform(begin(trial_simplex), end(trial_simplex),
+                            begin(result), f);
+                    extrema = std::minmax_element(begin(result), end(result));
+                    best = std::distance(begin(result), extrema.first);
+                    worst = std::distance(begin(result), extrema.second);
+                    cent = detail::centroid(trial_simplex, worst);
+                } else {
+                    trial_simplex[worst] = contract;
+                    result[worst] = contract_res;
+                    worst = std::distance(begin(result),
+                            std::max_element(begin(result), end(result)));
+                    cent = detail::centroid(trial_simplex, worst);
+                }
+            }
+        }
+    }
 
     return trial_simplex[best];
 }

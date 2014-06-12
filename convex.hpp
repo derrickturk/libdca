@@ -10,78 +10,76 @@ namespace convex {
 
 namespace detail {
 
-template<class... Params>
+template<class Tuple>
 struct simplex_traits {
-    using vertex_type = std::tuple<Params...>;
+    using vertex_type = Tuple;
     static const std::size_t vertex_length =
         std::tuple_size<vertex_type>::value;
     static const std::size_t simplex_length = 1 + vertex_length;
     using simplex_type = std::array<vertex_type, simplex_length>;
 };
 
-template<std::size_t N, class... Params>
+template<std::size_t N, class Tuple>
 struct tuple_add_impl {
-    static void impl(std::tuple<Params...>& augend,
-            const std::tuple<Params...>& addend)
+    static void impl(Tuple& augend, const Tuple& addend)
     {
         std::get<N - 1>(augend) += std::get<N - 1>(addend);
-        typename tuple_add_impl<N - 1, Params...>::impl(
-                augend, addend);
+        tuple_add_impl<N - 1, Tuple>::impl(augend, addend);
     }
 };
 
-template<class... Params>
-struct tuple_add_impl<0, Params...> {
-    static void impl(std::tuple<Params...>& augend,
-            const std::tuple<Params...>& addend)
+template<class Tuple>
+struct tuple_add_impl<0, Tuple> {
+    static void impl(Tuple&, const Tuple&)
     {
     }
 };
 
-template<class... Params>
-void tuple_add(std::tuple<Params...>& augend,
-        const std::tuple<Params...>& addend)
+template<class Tuple>
+void tuple_add(Tuple& augend,
+        const Tuple& addend)
 {
     tuple_add_impl<
-        std::tuple_size<std::tuple<Params...>>::value,
-        Params...
+        std::tuple_size<Tuple>::value,
+        Tuple
     >::impl(augend, addend);
 }
 
-template<class D, std::size_t N, class... Params>
+template<class D, std::size_t N, class Tuple>
 struct tuple_divide_scalar_impl {
-    static void impl(std::tuple<Params...>& dividend, D divisor)
+    static void impl(Tuple& dividend, D divisor)
     {
         std::get<N - 1>(dividend) /= divisor;
-        typename tuple_divide_scalar_impl<D, N - 1, Params...>::impl(
+        tuple_divide_scalar_impl<D, N - 1, Tuple>::impl(
                 dividend, divisor);
     }
 };
 
-template<class D, class... Params>
-struct tuple_divide_scalar_impl<D, 0, Params...> {
-    static void impl(std::tuple<Params...>& dividend, D divisor)
+template<class D, class Tuple>
+struct tuple_divide_scalar_impl<D, 0, Tuple> {
+    static void impl(Tuple&, D)
     {
     }
 };
 
-template<class D, class... Params>
-void tuple_divide_scalar(std::tuple<Params...>& dividend, D divisor)
+template<class D, class Tuple>
+void tuple_divide_scalar(Tuple& dividend, D divisor)
 {
     tuple_divide_scalar_impl<
         D,
-        std::tuple_size<std::tuple<Params...>>::value,
-        Params...
+        std::tuple_size<Tuple>::value,
+        Tuple
     >::impl(dividend, divisor);
 }
 
 }
 
 template<class... Params>
-using simplex = typename detail::simplex_traits<Params...>::simplex_type;
+using simplex =
+    typename detail::simplex_traits<std::tuple<Params...>>::simplex_type;
 
-template<class... Params>
-std::tuple<Params...> centroid(const simplex<Params...>& spx,
+template<class Simplex>
+typename Simplex::value_type centroid(const Simplex& spx,
         std::size_t except_index);
 
 template<class Fn, class Simplex>
@@ -93,11 +91,11 @@ typename Simplex::value_type nelder_mead(
         double exp_factor = 2.0,
         double con_factor = 0.5);
 
-template<class... Params>
-std::tuple<Params...> centroid(const simplex<Params...>& spx,
+template<class Simplex>
+typename Simplex::value_type centroid(const Simplex& spx,
         std::size_t except_index)
 {
-    std::tuple<Params...> result; // value-initialized (all 0)
+    typename Simplex::value_type result; // value-initialized (all 0)
     for (std::size_t i = 0; i < spx.size(); ++i) {
         if (i != except_index)
             detail::tuple_add(result, spx[i]);
@@ -124,6 +122,13 @@ typename Simplex::value_type nelder_mead(
     auto extrema = std::minmax_element(begin(result), end(result));
     std::size_t best = std::distance(begin(result), extrema.first),
         worst = std::distance(begin(result), extrema.second);
+    auto cent = centroid(trial_simplex, worst);
+
+    static_cast<void>(cent);
+    static_cast<void>(max_iter);
+    static_cast<void>(ref_factor);
+    static_cast<void>(exp_factor);
+    static_cast<void>(con_factor);
 
     return trial_simplex[best];
 }

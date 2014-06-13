@@ -19,11 +19,9 @@ class arps_exponential {
     private:
         double qi_;
         double D_;
-};
 
-namespace {
-    const double eps = 1e-5;
-}
+        static constexpr double eps_ = 1e-5;
+};
 
 inline arps_exponential::arps_exponential(double qi, double D)
     : qi_(qi), D_(D)
@@ -52,7 +50,7 @@ inline double arps_exponential::rate(double time) const noexcept
 
 inline double arps_exponential::cumulative(double time) const noexcept
 {
-    if (D_ < eps)
+    if (D_ < eps_)
         return qi_ * time;
     return qi_ / D_ * (1.0 - std::exp(-D_ * time));
 }

@@ -73,28 +73,13 @@ struct decline_traits<arps_exponential> {
         };
     }
 
-    template<class RateIter, class TimeIter>
-    static arps_exponential best_from_rate(
-            RateIter rate_begin, RateIter rate_end, TimeIter time_begin)
-    {
-        return tuple::construct<arps_exponential>(
-                convex::nelder_mead([=](double qi, double D) {
-                    return sse_against_rate(arps_exponential(qi, D),
-                        rate_begin, rate_end, time_begin);
-                    }, initial_simplex(), 300));
-    }
-
-    template<class VolIter>
-    static arps_exponential best_from_interval_volume(
-            VolIter vol_begin, VolIter vol_end,
-            double time_initial, double time_step)
-    {
-        return tuple::construct<arps_exponential>(
-                convex::nelder_mead([=](double qi, double D) {
-                    return sse_against_interval(arps_exponential(qi, D),
-                        vol_begin, vol_end, time_initial, time_step);
-                    }, initial_simplex(), 300));
-    }
+#define DECL_TYPE arps_exponential
+#define DECL_ARGS double qi, double D
+#define CONST_ARGS qi, D
+#include "evaluators.def"
+#undef DECL_TYPE
+#undef DECL_ARGS
+#undef CONST_ARGS
 };
 
 template<>
@@ -109,28 +94,13 @@ struct decline_traits<arps_hyperbolic> {
         };
     }
 
-    template<class RateIter, class TimeIter>
-    static arps_hyperbolic best_from_rate(
-            RateIter rate_begin, RateIter rate_end, TimeIter time_begin)
-    {
-        return tuple::construct<arps_hyperbolic>(
-                convex::nelder_mead([=](double qi, double Di, double b) {
-                    return sse_against_rate(arps_hyperbolic(qi, Di, b),
-                        rate_begin, rate_end, time_begin);
-                    }, initial_simplex(), 300));
-    }
-
-    template<class VolIter>
-    static arps_hyperbolic best_from_interval_volume(
-            VolIter vol_begin, VolIter vol_end,
-            double time_initial, double time_step)
-    {
-        return tuple::construct<arps_hyperbolic>(
-                convex::nelder_mead([=](double qi, double Di, double b) {
-                    return sse_against_interval(arps_hyperbolic(qi, Di, b),
-                        vol_begin, vol_end, time_initial, time_step);
-                    }, initial_simplex(), 300));
-    }
+#define DECL_TYPE arps_hyperbolic
+#define DECL_ARGS double qi, double Di
+#define CONST_ARGS qi, Di
+#include "evaluators.def"
+#undef DECL_TYPE
+#undef DECL_ARGS
+#undef CONST_ARGS
 };
 
 template<>
@@ -147,32 +117,13 @@ struct decline_traits<arps_hyperbolic_to_exponential> {
         };
     }
 
-    template<class RateIter, class TimeIter>
-    static arps_hyperbolic_to_exponential best_from_rate(
-            RateIter rate_begin, RateIter rate_end, TimeIter time_begin)
-    {
-        return tuple::construct<arps_hyperbolic_to_exponential>(
-                convex::nelder_mead([=](double qi, double Di,
-                        double b, double Df) {
-                    return sse_against_rate(
-                        arps_hyperbolic_to_exponential(qi, Di, b, Df),
-                        rate_begin, rate_end, time_begin);
-                    }, initial_simplex(), 300));
-    }
-
-    template<class VolIter>
-    static arps_hyperbolic_to_exponential best_from_interval_volume(
-            VolIter vol_begin, VolIter vol_end,
-            double time_initial, double time_step)
-    {
-        return tuple::construct<arps_hyperbolic_to_exponential>(
-                convex::nelder_mead([=](double qi, double Di,
-                        double b, double Df) {
-                    return sse_against_interval(
-                        arps_hyperbolic_to_exponential(qi, Di, b, Df),
-                        vol_begin, vol_end, time_initial, time_step);
-                    }, initial_simplex(), 300));
-    }
+#define DECL_TYPE arps_hyperbolic_to_exponential
+#define DECL_ARGS double qi, double Di, double b, double Df
+#define CONST_ARGS qi, Di, b, Df
+#include "evaluators.def"
+#undef DECL_TYPE
+#undef DECL_ARGS
+#undef CONST_ARGS
 };
 
 }

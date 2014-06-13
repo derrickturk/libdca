@@ -1,0 +1,22 @@
+template<class RateIter, class TimeIter>
+static DECL_TYPE best_from_rate(
+        RateIter rate_begin, RateIter rate_end, TimeIter time_begin)
+{
+    return tuple::construct<DECL_TYPE>(
+            convex::nelder_mead([=](DECL_ARGS) {
+                return sse_against_rate(DECL_TYPE(CONST_ARGS),
+                    rate_begin, rate_end, time_begin);
+                }, initial_simplex(), 300));
+}
+
+template<class VolIter>
+static DECL_TYPE best_from_interval_volume(
+        VolIter vol_begin, VolIter vol_end,
+        double time_initial, double time_step)
+{
+    return tuple::construct<DECL_TYPE>(
+            convex::nelder_mead([=](DECL_ARGS) {
+                return sse_against_interval(DECL_TYPE(CONST_ARGS),
+                    vol_begin, vol_end, time_initial, time_step);
+                }, initial_simplex(), 300));
+}

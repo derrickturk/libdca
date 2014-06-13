@@ -5,3 +5,5 @@
 *.lib
 *.dll
 *.log
+*.txt
+*.tsv

@@ -4,8 +4,12 @@ static DECL_TYPE best_from_rate(
 {
     return tuple::construct<DECL_TYPE>(
             convex::nelder_mead([=](DECL_ARGS) {
-                return sse_against_rate(DECL_TYPE(CONST_ARGS),
-                    rate_begin, rate_end, time_begin);
+                try {
+                    return sse_against_rate(DECL_TYPE(CONST_ARGS),
+                        rate_begin, rate_end, time_begin);
+                } catch (...) {
+                    return std::numeric_limits<double>::infinity();
+                }
                 }, initial_simplex(), 300));
 }
 
@@ -16,7 +20,11 @@ static DECL_TYPE best_from_interval_volume(
 {
     return tuple::construct<DECL_TYPE>(
             convex::nelder_mead([=](DECL_ARGS) {
-                return sse_against_interval(DECL_TYPE(CONST_ARGS),
-                    vol_begin, vol_end, time_initial, time_step);
+                try {
+                    return sse_against_interval(DECL_TYPE(CONST_ARGS),
+                        vol_begin, vol_end, time_initial, time_step);
+                } catch (...) {
+                    return std::numeric_limits<double>::infinity();
+                }
                 }, initial_simplex(), 300));
 }

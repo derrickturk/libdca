@@ -12,6 +12,7 @@
 #include <algorithm>
 #include <functional>
 #include <cmath>
+#include <limits>
 
 namespace dca {
 

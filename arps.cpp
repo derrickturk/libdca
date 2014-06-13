@@ -35,7 +35,7 @@ int main()
     std::cout << "EUR: " << dca::eur(h2e, 1, 30) << '\n';
 
     std::vector<double> time;
-    for (double t = 0; t <= 5; t += 0.5)
+    for (double t = 0; t <= 25; t += 0.5)
         time.push_back(t);
 
     std::vector<double> rate, interval;

@@ -2,11 +2,8 @@
 
 #include <iostream>
 
-double complex_fn(const std::tuple<double, double>& params)
+inline double complex_fn(double x, double y)
 {
-    double x = std::get<0>(params);
-    double y = std::get<1>(params);
-
     return -((x + 2) * (x + 2) - 3 * (y - 4) * (y - 4) * (y - 4) * (y - 4));
 }
 

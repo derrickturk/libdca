@@ -31,7 +31,7 @@ struct apply_impl {
 template<>
 struct apply_impl<0> {
     template<class F, class Tuple, class... TParams>
-    static auto apply(F&& fn, Tuple&& t, TParams&&... args)
+    static auto apply(F&& fn, Tuple&&, TParams&&... args)
       -> decltype(std::forward<F>(fn)(std::forward<TParams>(args)...))
     {
         return std::forward<F>(fn)(std::forward<TParams>(args)...);
@@ -54,7 +54,7 @@ struct construct_impl {
 template<>
 struct construct_impl<0> {
     template<class T, class Tuple, class... TParams>
-    static T construct(Tuple&& t, TParams&&... args)
+    static T construct(Tuple&&, TParams&&... args)
     {
         return T(std::forward<TParams>(args)...);
     }
@@ -80,6 +80,15 @@ T construct(Tuple&& t)
         std::tuple_size<typename std::decay<Tuple>::type>::value
       >::template construct<T>(std::forward<Tuple>(t));
 }
+
+template<class>
+struct result_of;
+
+template<class F, class Tuple>
+struct result_of<F(Tuple)>
+{
+    typedef decltype(apply(std::declval<F>(), std::declval<Tuple>())) type;
+};
 
 }
 

@@ -6,6 +6,8 @@
 #include <algorithm>
 #include <cstddef>
 
+#include "tuple_tools.hpp"
+
 namespace convex {
 
 namespace detail {
@@ -145,9 +147,10 @@ typename Simplex::value_type nelder_mead(
     using std::end;
 
     auto trial_simplex(initial_simplex);
-    std::array<typename std::result_of<Fn(typename Simplex::value_type)>::type,
+    std::array<typename tuple::result_of<Fn(typename Simplex::value_type)>::type,
         std::tuple_size<Simplex>::value> result;
-    std::transform(begin(trial_simplex), end(trial_simplex), begin(result), f);
+    std::transform(begin(trial_simplex), end(trial_simplex), begin(result),
+            [&](typename Simplex::value_type& t){ return tuple::apply(f, t); });
 
     auto extrema = std::minmax_element(begin(result), end(result));
     std::size_t best = std::distance(begin(result), extrema.first),
@@ -157,13 +160,13 @@ typename Simplex::value_type nelder_mead(
     for (int i = 0; i < max_iter; ++i) {
         auto reflect = detail::tuple_2_scale_add(
                 cent, 1.0 + ref_factor, trial_simplex[worst], -ref_factor);
-        auto reflect_res = f(reflect);
+        auto reflect_res = tuple::apply(f, reflect);
 
         if (reflect_res < result[best]) {
             // reflection was better than the best, try expanding
             auto expand = detail::tuple_2_scale_add(
                     reflect, 1.0 + exp_factor, cent, -exp_factor);
-            auto expand_res = f(expand);
+            auto expand_res = tuple::apply(f, expand);
             if (expand_res < result[best]) {
                 trial_simplex[worst] = expand;
                 result[worst] = expand_res;
@@ -207,7 +210,7 @@ typename Simplex::value_type nelder_mead(
                 auto contract = detail::tuple_2_scale_add(
                         trial_simplex[worst], con_factor,
                         cent, 1.0 - con_factor);
-                auto contract_res = f(contract);
+                auto contract_res = tuple::apply(f, contract);
 
                 if (contract_res >= result[worst]) {
                     // it got worse! (or no better) --- contract everything
@@ -218,7 +221,10 @@ typename Simplex::value_type nelder_mead(
                                     trial_simplex[best], 0.5);
 
                     std::transform(begin(trial_simplex), end(trial_simplex),
-                            begin(result), f);
+                            begin(result),
+                            [&](typename Simplex::value_type& t){
+                              return tuple::apply(f, t);
+                            });
                     extrema = std::minmax_element(begin(result), end(result));
                     best = std::distance(begin(result), extrema.first);
                     worst = std::distance(begin(result), extrema.second);

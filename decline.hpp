@@ -93,10 +93,10 @@ inline double eur(const Decline& decline, double economic_limit,
 template<class Decline>
 inline double time_to_rate(const Decline& decline, double rate) noexcept
 {
-    return std::get<0>(convex::nelder_mead([&](const std::tuple<double>& t) {
-                return (std::get<0>(t) < 0.0)
+    return std::get<0>(convex::nelder_mead([&](double t) {
+                return (t < 0.0)
                   ? std::numeric_limits<double>::infinity()
-                  : std::abs(decline.rate(std::get<0>(t)) - rate);
+                  : std::abs(decline.rate(t) - rate);
             }, convex::simplex<double> {
                 std::make_tuple(0.0), std::make_tuple(100)
             }, 300));
@@ -105,10 +105,10 @@ inline double time_to_rate(const Decline& decline, double rate) noexcept
 template<class Decline>
 inline double time_to_cumulative(const Decline& decline, double cum) noexcept
 {
-    return std::get<0>(convex::nelder_mead([&](const std::tuple<double>& t) {
-                return (std::get<0>(t) < 0.0)
+    return std::get<0>(convex::nelder_mead([&](double t) {
+                return (t < 0.0)
                   ? std::numeric_limits<double>::infinity()
-                  : std::abs(decline.cumulative(std::get<0>(t)) - cum);
+                  : std::abs(decline.cumulative(t) - cum);
             }, convex::simplex<double> {
                 std::make_tuple(0.0), std::make_tuple(100)
             }, 300));

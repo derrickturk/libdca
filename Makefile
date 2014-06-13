@@ -2,7 +2,7 @@ CXX=g++
 CXXFLAGS=-std=c++11 -pedantic -Wall -Wextra -Werror -static
 CXXOPTFLAGS=-O2 -fno-rtti -msse3 -mfpmath=sse -ffast-math
 
-arps.exe: arps.cpp decline.hpp exponential.hpp hyperbolic.hpp
+arps.exe: arps.cpp decline.hpp exponential.hpp hyperbolic.hpp hyptoexp.hpp
 	$(CXX) $(CXXFLAGS) $(CXXOPTFLAGS) -o arps arps.cpp
 
 bestfit.o: bestfit.cpp bestfit.hpp

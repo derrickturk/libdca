@@ -38,6 +38,49 @@ inline arps_hyperbolic_to_exponential::arps_hyperbolic_to_exponential(
     // will be treated as wholly exponential
 }
 
+inline const double& arps_hyperbolic_to_exponential::qi() const noexcept
+{
+    return arps_hyperbolic::qi();
+}
+
+inline const double& arps_hyperbolic_to_exponential::Di() const noexcept
+{
+    return arps_hyperbolic::Di();
+}
+
+inline const double& arps_hyperbolic_to_exponential::b() const noexcept
+{
+    return arps_hyperbolic::b();
+}
+
+inline const double& arps_hyperbolic_to_exponential::Df() const noexcept
+{
+    return arps_exponential::D();
+}
+
+inline double arps_hyperbolic_to_exponential::rate(double time) const noexcept
+{
+    if (time < t_trans_)
+        return arps_hyperbolic::rate(time);
+    return arps_exponential::rate(time - t_trans_);
+}
+
+inline double arps_hyperbolic_to_exponential::cumulative(double time) const
+  noexcept
+{
+    if (time < t_trans_)
+        return arps_hyperbolic::cumulative(time);
+    return arps_hyperbolic::cumulative(t_trans_) +
+        arps_exponential::rate(time - t_trans_);
+}
+
+inline double arps_hyperbolic_to_exponential::D(double time) const noexcept
+{
+    if (time < t_trans_)
+        return arps_hyperbolic::D(time);
+    return arps_exponential::D();
+}
+
 }
 
 #define HYP2EXP_HPP

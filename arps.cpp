@@ -1,6 +1,7 @@
 #include <iostream>
 #include "exponential.hpp"
 #include "hyperbolic.hpp"
+#include "hyptoexp.hpp"
 
 int main()
 {
@@ -18,5 +19,14 @@ int main()
     std::cout << "hyperbolic\n";
     for (double t = 0; t <= 12; t += 0.25)
         std::cout << "t = " << t << ", q = " << hyp.rate(t) << ", Np = "
-            << hyp.cumulative(t) << '\n';
+            << hyp.cumulative(t) << ", D = " << hyp.D(t) << '\n';
+
+    dca::arps_hyperbolic_to_exponential h2e(1000,
+            dca::decline<dca::tangent_effective>(0.95), 1.5,
+            dca::decline<dca::tangent_effective>(0.15));
+
+    std::cout << "hyp2exp\n";
+    for (double t = 0; t <= 12; t += 0.25)
+        std::cout << "t = " << t << ", q = " << h2e.rate(t) << ", Np = "
+            << h2e.cumulative(t) << ", D = " << h2e.D(t) << '\n';
 }

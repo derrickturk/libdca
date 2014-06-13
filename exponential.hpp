@@ -50,6 +50,7 @@ inline double arps_exponential::rate(double time) const noexcept
 
 inline double arps_exponential::cumulative(double time) const noexcept
 {
+    if (time < 0.0) return 0.0;
     if (D_ < eps_)
         return qi_ * time;
     return qi_ / D_ * (1.0 - std::exp(-D_ * time));

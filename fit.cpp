@@ -14,13 +14,6 @@
 
 using dataset = std::unordered_map<std::string, std::vector<std::string>>;
 
-struct sentinel {
-    ~sentinel() noexcept
-    {
-        std::cerr << "sentinel destroyed.\n";
-    }
-};
-
 dataset read_delimited(std::istream& is, char delim = '\t');
 
 template<class F>
@@ -109,15 +102,11 @@ F foreach_well(const dataset& data, F fn, std::string id_field)
                     [&](const std::pair<std::string,
                         std::vector<std::string>>& column)
                     {
-                        std::cerr << "size = " << column.second.size()
-                          << ", begin = " << begin_rec << ", end = "
-                          << end_rec + 1 << '\n';
                         well[column.first] = std::vector<std::string>(
                             column.second.data() + begin_rec,
                             column.second.data() + end_rec + 1);
                     }
             );
-            std::cerr << "built well rec\n";
             fn(well);
 
             begin_rec = i;
@@ -133,7 +122,6 @@ void process_well(const dataset& data)
     static const std::string id_field = "PROPNUM";
     static const std::string oil_field = "OIL";
     static const std::string gas_field = "GAS";
-    static const sentinel sent;
 
     const auto& oil = data.at(oil_field);
     const auto& gas = data.at(gas_field);

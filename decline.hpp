@@ -1,6 +1,8 @@
 #ifndef DECLINE_HPP
 
+#include "convex.hpp"
 #include <cmath>
+#include <limits>
 
 namespace dca {
 
@@ -78,6 +80,26 @@ double convert_decline<secant_effective, secant_effective>(double D, double)
 template<decline_rate Type> inline constexpr double decline(double D) noexcept
 {
     return convert_decline<Type, nominal>(D);
+}
+
+template<class Decline>
+inline double eur(const Decline& decline, double economic_limit,
+        double max_time = std::numeric_limits<double>::infinity()) noexcept
+{
+    return decline.cumulative(std::min(time_to_rate(decline, economic_limit),
+                max_time));
+}
+
+template<class Decline>
+inline double time_to_rate(const Decline& decline, double rate) noexcept
+{
+    return std::get<0>(convex::nelder_mead([&](const std::tuple<double>& t) {
+                return (std::get<0>(t) < 0.0)
+                  ? std::numeric_limits<double>::infinity()
+                  : std::abs(decline.rate(std::get<0>(t)) - rate);
+            }, convex::simplex<double> {
+                std::make_tuple(0.0), std::make_tuple(100)
+            }, 300));
 }
 
 }

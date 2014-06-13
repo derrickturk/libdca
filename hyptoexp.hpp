@@ -71,7 +71,7 @@ inline double arps_hyperbolic_to_exponential::cumulative(double time) const
     if (time < t_trans_)
         return arps_hyperbolic::cumulative(time);
     return arps_hyperbolic::cumulative(t_trans_) +
-        arps_exponential::rate(time - t_trans_);
+        arps_exponential::cumulative(time - t_trans_);
 }
 
 inline double arps_hyperbolic_to_exponential::D(double time) const noexcept

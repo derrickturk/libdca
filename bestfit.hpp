@@ -96,8 +96,8 @@ struct decline_traits<arps_hyperbolic> {
     }
 
 #define DECL_TYPE arps_hyperbolic
-#define DECL_ARGS double qi, double Di
-#define CONST_ARGS qi, Di
+#define DECL_ARGS double qi, double Di, double b
+#define CONST_ARGS qi, Di, b
 #include "evaluators.def"
 #undef DECL_TYPE
 #undef DECL_ARGS

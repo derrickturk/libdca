@@ -56,7 +56,6 @@ int main(int argc, char* argv[])
     std::cout << "PROPNUM\tOilEUR\tGasEUR\tOil.qi\tOil.Di\tOil.b\t"
         "Gas.qi\tGas.Di\tGas.b\n";
     foreach_well(data, process_well);
-    std::cerr << "did main\n";
 }
 
 dataset read_delimited(std::istream& is, char delim)

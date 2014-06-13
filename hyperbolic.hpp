@@ -39,6 +39,8 @@ inline arps_hyperbolic::arps_hyperbolic(double qi, double Di, double b)
         throw std::out_of_range("Di must be non-negative.");
     if (b < 0.0)
         throw std::out_of_range("b must be non-negative.");
+    if (b > 5.0)
+        throw std::out_of_range("b is implausibly high.");
 }
 
 inline const double& arps_hyperbolic::qi() const noexcept

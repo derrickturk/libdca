@@ -102,6 +102,18 @@ inline double time_to_rate(const Decline& decline, double rate) noexcept
             }, 300));
 }
 
+template<class Decline>
+inline double time_to_cumulative(const Decline& decline, double cum) noexcept
+{
+    return std::get<0>(convex::nelder_mead([&](const std::tuple<double>& t) {
+                return (std::get<0>(t) < 0.0)
+                  ? std::numeric_limits<double>::infinity()
+                  : std::abs(decline.cumulative(std::get<0>(t)) - cum);
+            }, convex::simplex<double> {
+                std::make_tuple(0.0), std::make_tuple(100)
+            }, 300));
+}
+
 }
 
 #define DECLINE_HPP

@@ -2,6 +2,7 @@
 #include "exponential.hpp"
 #include "hyperbolic.hpp"
 #include "hyptoexp.hpp"
+#include "bestfit.hpp"
 
 int main()
 {
@@ -32,4 +33,30 @@ int main()
         std::cout << "t = " << t << ", q = " << h2e.rate(t) << ", Np = "
             << h2e.cumulative(t) << ", D = " << h2e.D(t) << '\n';
     std::cout << "EUR: " << dca::eur(h2e, 1, 30) << '\n';
+
+    std::vector<double> time;
+    for (double t = 0; t <= 5; t += 0.5)
+        time.push_back(t);
+
+    std::vector<double> rate, interval;
+    for (auto t: time) {
+        rate.push_back(h2e.rate(t));
+        interval.push_back(h2e.cumulative(t));
+    }
+
+    for (auto i = time.size() - 1; i > 0; --i)
+        interval[i] -= interval[i - 1];
+
+    auto best_rate = dca::best_from_rate<dca::arps_hyperbolic_to_exponential>(
+            rate.begin(), rate.end(), time.begin());
+
+    auto best_interval =
+        dca::best_from_interval_volume<dca::arps_hyperbolic_to_exponential>(
+                interval.begin(), interval.end(), 0, 0.5);
+
+    std::cout << "best rate fit (" << best_rate.qi() << ", " << best_rate.Di()
+        << ", " << best_rate.b() << ", " << best_rate.Df() << ")\n";
+    std::cout << "best interval fit (" << best_interval.qi() << ", "
+        << best_interval.Di() << ", " << best_interval.b() << ", "
+        << best_interval.Df() << ")\n";
 }

@@ -84,10 +84,12 @@ template<decline_rate Type> inline constexpr double decline(double D) noexcept
 
 template<class Decline>
 inline double eur(const Decline& decline, double economic_limit,
-        double max_time = std::numeric_limits<double>::infinity()) noexcept
+        double max_time = std::numeric_limits<double>::infinity(),
+        double* time_to_eur = nullptr) noexcept
 {
-    return decline.cumulative(std::min(time_to_rate(decline, economic_limit),
-                max_time));
+    double t_eur = std::min(time_to_rate(decline, economic_limit), max_time);
+    if (time_to_eur) *time_to_eur = t_eur;
+    return decline.cumulative(t_eur);
 }
 
 template<class Decline>

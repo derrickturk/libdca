@@ -41,7 +41,7 @@ int main()
     std::vector<double> rate, interval;
     for (auto t: time) {
         rate.push_back(h2e.rate(t));
-        interval.push_back(h2e.cumulative(t));
+        interval.push_back(h2e.cumulative(t + 0.5));
     }
 
     for (auto i = time.size() - 1; i > 0; --i)

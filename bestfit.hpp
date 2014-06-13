@@ -47,10 +47,9 @@ inline double sse_against_interval(const Decline& decl,
 
         double operator()(double sse, double vol)
         {
+            t += step;
             double interval = d.cumulative(t) - last_cum;
             last_cum += interval;
-            t += step;
-
             return sse + std::pow(vol - interval, 2);
         }
     };

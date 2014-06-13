@@ -133,7 +133,8 @@ typename Simplex::value_type nelder_mead(
         Fn f,
         const Simplex& initial_simplex,
         int max_iter,
-        double term_eps = 1e-3,
+        double term_eps = std::sqrt(std::numeric_limits<double>::epsilon()),
+        int term_iter = 10,
         double ref_factor = 1.0,
         double exp_factor = 2.0,
         double con_factor = 0.5);
@@ -143,7 +144,7 @@ typename Simplex::value_type nelder_mead(
         Fn f,
         const Simplex& initial_simplex,
         int max_iter,
-        double term_eps,
+        double term_eps, int term_iter,
         double ref_factor, double exp_factor, double con_factor)
 {
     using std::begin;
@@ -160,7 +161,7 @@ typename Simplex::value_type nelder_mead(
         worst = std::distance(begin(result), extrema.second);
     auto cent = detail::centroid(trial_simplex, worst);
 
-    for (int i = 0; i < max_iter; ++i) {
+    for (int i = 0, t = 0; t < term_iter && i < max_iter; ++i) {
         auto reflect = detail::tuple_2_scale_add(
                 cent, 1.0 + ref_factor, trial_simplex[worst], -ref_factor);
         auto reflect_res = tuple::apply(f, reflect);
@@ -243,7 +244,9 @@ typename Simplex::value_type nelder_mead(
         }
 
         if (result[worst] - result[best] < term_eps)
-            break;
+            ++t;
+        else
+            t = 0;
     }
 
     return trial_simplex[best];

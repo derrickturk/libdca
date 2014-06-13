@@ -133,6 +133,7 @@ typename Simplex::value_type nelder_mead(
         Fn f,
         const Simplex& initial_simplex,
         int max_iter,
+        double term_eps = 1e-3,
         double ref_factor = 1.0,
         double exp_factor = 2.0,
         double con_factor = 0.5);
@@ -142,6 +143,7 @@ typename Simplex::value_type nelder_mead(
         Fn f,
         const Simplex& initial_simplex,
         int max_iter,
+        double term_eps,
         double ref_factor, double exp_factor, double con_factor)
 {
     using std::begin;
@@ -239,6 +241,9 @@ typename Simplex::value_type nelder_mead(
                 }
             }
         }
+
+        if (result[worst] - result[best] < term_eps)
+            break;
     }
 
     return trial_simplex[best];

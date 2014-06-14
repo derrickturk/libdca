@@ -72,14 +72,6 @@ struct decline_traits<arps_exponential> {
             std::make_tuple(5e2, 2.3)
         };
     }
-
-#define DECL_TYPE arps_exponential
-#define DECL_ARGS double qi, double D
-#define CONST_ARGS qi, D
-#include "evaluators.def"
-#undef DECL_TYPE
-#undef DECL_ARGS
-#undef CONST_ARGS
 };
 
 template<>
@@ -93,14 +85,6 @@ struct decline_traits<arps_hyperbolic> {
             std::make_tuple(50, 1.0, 0.75)
         };
     }
-
-#define DECL_TYPE arps_hyperbolic
-#define DECL_ARGS double qi, double Di, double b
-#define CONST_ARGS qi, Di, b
-#include "evaluators.def"
-#undef DECL_TYPE
-#undef DECL_ARGS
-#undef CONST_ARGS
 };
 
 template<>
@@ -116,32 +100,47 @@ struct decline_traits<arps_hyperbolic_to_exponential> {
             std::make_tuple(50, 1.0, 0.75, 0.05)
         };
     }
-
-#define DECL_TYPE arps_hyperbolic_to_exponential
-#define DECL_ARGS double qi, double Di, double b, double Df
-#define CONST_ARGS qi, Di, b, Df
-#include "evaluators.def"
-#undef DECL_TYPE
-#undef DECL_ARGS
-#undef CONST_ARGS
 };
 
 }
 
 template<class Decline, class RateIter, class TimeIter>
-inline Decline best_from_rate(RateIter rate_begin, RateIter rate_end,
-        TimeIter time_begin)
+inline Decline best_from_rate(
+        RateIter rate_begin, RateIter rate_end, TimeIter time_begin)
 {
-    return detail::decline_traits<Decline>::best_from_rate(
-            rate_begin, rate_end, time_begin);
+    return tuple::construct<Decline>(
+            convex::nelder_mead(
+              [=](const typename decltype(
+                detail::decline_traits<Decline>::initial_simplex()
+                )::value_type& t) {
+                  try {
+                      return detail::sse_against_rate(
+                          tuple::construct<Decline>(t),
+                          rate_begin, rate_end, time_begin);
+                  } catch (...) {
+                      return std::numeric_limits<double>::infinity();
+                  }
+              }, detail::decline_traits<Decline>::initial_simplex(), 300));
 }
 
 template<class Decline, class VolIter>
-inline Decline best_from_interval_volume(VolIter vol_begin, VolIter vol_end,
+inline Decline best_from_interval_volume(
+        VolIter vol_begin, VolIter vol_end,
         double time_initial, double time_step)
 {
-    return detail::decline_traits<Decline>::best_from_interval_volume(
-            vol_begin, vol_end, time_initial, time_step);
+    return tuple::construct<Decline>(
+            convex::nelder_mead(
+              [=](const typename decltype(
+                detail::decline_traits<Decline>::initial_simplex()
+                )::value_type& t) {
+                  try {
+                      return detail::sse_against_interval(
+                          tuple::construct<Decline>(t),
+                          vol_begin, vol_end, time_initial, time_step);
+                  } catch (...) {
+                      return std::numeric_limits<double>::infinity();
+                  }
+              }, detail::decline_traits<Decline>::initial_simplex(), 300));
 }
 
 }

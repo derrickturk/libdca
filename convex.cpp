@@ -16,10 +16,12 @@ int main()
 {
 
 
-    convex::simplex<double, double> s = {
-        std::make_tuple(-2.5, -2.5),
-        std::make_tuple(0, 0),
-        std::make_tuple(2.5, 2.5)
+    convex::simplex<double, double> s {
+        {
+            std::make_tuple(-2.5, -2.5),
+            std::make_tuple(0, 0),
+            std::make_tuple(2.5, 2.5)
+        }
     };
     auto res = convex::nelder_mead(complex_fn, s, 1000);
     auto t_res = convex::nelder_mead(t_complex_fn, s, 1000);

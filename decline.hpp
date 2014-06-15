@@ -100,7 +100,7 @@ inline double time_to_rate(const Decline& decline, double rate) noexcept
                   ? std::numeric_limits<double>::infinity()
                   : std::abs(decline.rate(t) - rate);
             }, convex::simplex<double> {
-                std::make_tuple(0.0), std::make_tuple(100)
+                { std::make_tuple(0.0), std::make_tuple(100) }
             }, 300));
 }
 
@@ -112,7 +112,7 @@ inline double time_to_cumulative(const Decline& decline, double cum) noexcept
                   ? std::numeric_limits<double>::infinity()
                   : std::abs(decline.cumulative(t) - cum);
             }, convex::simplex<double> {
-                std::make_tuple(0.0), std::make_tuple(100)
+                { std::make_tuple(0.0), std::make_tuple(100) }
             }, 300));
 }
 

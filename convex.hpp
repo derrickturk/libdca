@@ -169,8 +169,10 @@ typename Simplex::value_type nelder_mead(
     std::transform(begin(trial_simplex), end(trial_simplex), begin(result), f);
 
     auto extrema = std::minmax_element(begin(result), end(result));
-    std::size_t best = std::distance(begin(result), extrema.first),
-        worst = std::distance(begin(result), extrema.second);
+    std::size_t best = static_cast<std::size_t>(std::distance(begin(result),
+                extrema.first)),
+        worst = static_cast<std::size_t>(std::distance(begin(result),
+                    extrema.second));
     auto cent = detail::centroid(trial_simplex, worst);
 
     for (int i = 0, t = 0; t < term_iter && i < max_iter; ++i) {
@@ -192,8 +194,9 @@ typename Simplex::value_type nelder_mead(
             }
 
             best = worst;
-            worst = std::distance(begin(result),
-                    std::max_element(begin(result), end(result)));
+            worst = static_cast<std::size_t>(std::distance(
+                        begin(result),
+                        std::max_element(begin(result), end(result))));
             cent = detail::centroid(trial_simplex, worst);
         } else {
             auto worse = std::find_if(begin(result), end(result),
@@ -201,14 +204,15 @@ typename Simplex::value_type nelder_mead(
                         return r > reflect_res;
                     });
 
-            if (worse != end(result) &&
-                    std::distance(begin(result), worse) != worst) {
+            if (worse != end(result) && static_cast<std::size_t>(std::distance(
+                            begin(result), worse)) != worst) {
                 // there's somebody worse than the reflected point who is not
                 // the worst, so keep the reflected point
                 trial_simplex[worst] = reflect;
                 result[worst] = reflect_res;
-                worst = std::distance(begin(result),
-                        std::max_element(begin(result), end(result)));
+                worst = static_cast<std::size_t>(std::distance(
+                            begin(result),
+                            std::max_element(begin(result), end(result))));
                 cent = detail::centroid(trial_simplex, worst);
             } else {
                 // the reflected point is worse than everybody, except
@@ -218,8 +222,9 @@ typename Simplex::value_type nelder_mead(
                     // better than the worst!
                     trial_simplex[worst] = reflect;
                     result[worst] = reflect_res;
-                    worst = std::distance(begin(result),
-                            std::max_element(begin(result), end(result)));
+                    worst = static_cast<std::size_t>(std::distance(
+                                begin(result),
+                                std::max_element(begin(result), end(result))));
                     cent = detail::centroid(trial_simplex, worst);
                 }
 
@@ -239,14 +244,17 @@ typename Simplex::value_type nelder_mead(
                     std::transform(begin(trial_simplex), end(trial_simplex),
                             begin(result), f);
                     extrema = std::minmax_element(begin(result), end(result));
-                    best = std::distance(begin(result), extrema.first);
-                    worst = std::distance(begin(result), extrema.second);
+                    best = static_cast<std::size_t>(std::distance(
+                                begin(result), extrema.first));
+                    worst = static_cast<std::size_t>(std::distance(
+                                begin(result), extrema.second));
                     cent = detail::centroid(trial_simplex, worst);
                 } else {
                     trial_simplex[worst] = contract;
                     result[worst] = contract_res;
-                    worst = std::distance(begin(result),
-                            std::max_element(begin(result), end(result)));
+                    worst = static_cast<std::size_t>(std::distance(
+                                begin(result),
+                                std::max_element(begin(result), end(result))));
                     cent = detail::centroid(trial_simplex, worst);
                 }
             }

@@ -16,7 +16,10 @@ class any {
 
         any& operator=(const any& other);
         any& operator=(any&& other) noexcept;
-        any& operator=(any& other) = delete; // block template operator=
+        any& operator=(any& other) // block template operator=
+        {
+            return *this = const_cast<const any&>(other);
+        }
 
         template<class Decline>
         any& operator=(Decline&& d);
@@ -32,7 +35,7 @@ class any {
             virtual double cumulative(double time) const = 0;
 
             virtual ~any_impl_base() noexcept {}
-        }
+        };
 
         template<class Decline>
         struct any_impl : public any_impl_base {

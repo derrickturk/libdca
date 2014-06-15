@@ -4,6 +4,7 @@
 #include "hyperbolic.hpp"
 #include "hyptoexp.hpp"
 #include "bestfit.hpp"
+#include "any_decline.hpp"
 
 int main()
 {
@@ -60,4 +61,14 @@ int main()
     std::cout << "best interval fit (" << best_interval.qi() << ", "
         << best_interval.Di() << ", " << best_interval.b() << ", "
         << best_interval.Df() << ")\n";
+
+    dca::any decline(exp), decline2(hyp);
+    decline = h2e;
+    decline = decline2;
+
+    std::cout << "any\n";
+    for (double t = 0; t <= 12; t += 0.5)
+        std::cout << "t = " << t << ", q = " << decline.rate(t) << ", Np = "
+            << decline.cumulative(t) << '\n';
+    std::cout << "EUR: " << dca::eur(decline, 1, 30) << '\n';
 }

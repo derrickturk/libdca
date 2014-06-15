@@ -1,4 +1,5 @@
 #include <iostream>
+#include <vector>
 #include "exponential.hpp"
 #include "hyperbolic.hpp"
 #include "hyptoexp.hpp"

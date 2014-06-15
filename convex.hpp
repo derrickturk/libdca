@@ -6,6 +6,7 @@
 #include <array>
 #include <algorithm>
 #include <cstddef>
+#include <cmath>
 
 #include "tuple_tools.hpp"
 

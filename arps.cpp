@@ -66,7 +66,7 @@ int main()
     decline = h2e;
     decline = decline2;
 
-    std::cout << "any\n";
+    std::cout << "any: " << decline << '\n';
     for (double t = 0; t <= 12; t += 0.5)
         std::cout << "t = " << t << ", q = " << decline.rate(t) << ", Np = "
             << decline.cumulative(t) << '\n';

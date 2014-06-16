@@ -93,6 +93,15 @@ double arps_hyperbolic::harmonic_cumulative(double time) const noexcept
     return qi_ / Di_ * std::log(1.0 + Di_ * time);
 }
 
+#ifdef DCA_IOSTREAMS
+#include <iostream>
+inline std::ostream& operator<<(std::ostream& os, const arps_hyperbolic& d)
+{
+    return os << "<Arps hyperbolic decline: (qi = " << d.qi() << ", Di = "
+        << d.Di() << ", b = " << d.b() << ")>";
+}
+#endif
+
 }
 
 #define HYPERBOLIC_HPP

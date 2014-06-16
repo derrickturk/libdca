@@ -81,6 +81,16 @@ inline double arps_hyperbolic_to_exponential::D(double time) const noexcept
     return arps_exponential::D();
 }
 
+#ifdef DCA_IOSTREAMS
+#include <iostream>
+inline std::ostream& operator<<(std::ostream& os,
+        const arps_hyperbolic_to_exponential& d)
+{
+    return os << "<Arps hyperbolic-to-exponential decline: (qi = " << d.qi() << ", Di = "
+        << d.Di() << ", b = " << d.b() << ", Df = " << d.Df() << ")>";
+}
+#endif
+
 }
 
 #define HYP2EXP_HPP

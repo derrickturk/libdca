@@ -3,7 +3,7 @@ CXXFLAGS=-std=c++11 -pedantic -Wall -Wextra -Werror -static
 CXXOPTFLAGS=-O2 -fno-rtti -msse3 -mfpmath=sse -ffast-math
 CONFIG=-DDCA_IOSTREAMS
 
-fit.exe: fit.cpp decline.hpp exponential.hpp hyperbolic.hpp hyptoexp.hpp bestfit.hpp
+fit.exe: fit.cpp decline.hpp exponential.hpp hyperbolic.hpp hyptoexp.hpp bestfit.hpp production.hpp
 	$(CXX) $(CXXFLAGS) $(CONFIG) $(CXXOPTFLAGS) -o fit fit.cpp
 
 arps.exe: arps.cpp decline.hpp exponential.hpp hyperbolic.hpp hyptoexp.hpp bestfit.hpp any_decline.hpp
@@ -14,6 +14,9 @@ bestfit.o: bestfit.cpp bestfit.hpp
 
 convex.exe: convex.cpp convex.hpp
 	$(CXX) $(CXXFLAGS) $(CONFIG) $(CXXOPTFLAGS) -o convex convex.cpp
+
+production.exe: production.cpp production.hpp
+	$(CXX) $(CXXFLAGS) $(CONFIG) $(CXXOPTFLAGS) -o production production.cpp
 
 clean:
 	-rm *.exe *.o *.a

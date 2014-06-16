@@ -11,6 +11,7 @@
 #include "hyperbolic.hpp"
 #include "hyptoexp.hpp"
 #include "bestfit.hpp"
+#include "production.hpp"
 
 using dataset = std::unordered_map<std::string, std::vector<std::string>>;
 
@@ -131,13 +132,20 @@ void process_well(const dataset& data)
                 return std::strtod(d.c_str(), nullptr);
             });
 
-    auto peak_oil = std::max_element(oil_data.begin(), oil_data.end());
-    if (std::distance(peak_oil, oil_data.end()) < 3)
+    std::vector<double> gas_data(gas.size());
+    std::transform(gas.begin(), gas.end(), gas_data.begin(),
+            [](const std::string& d) {
+                return std::strtod(d.c_str(), nullptr);
+            });
+
+    auto shifted = dca::shift_to_peak(oil_data.begin(), oil_data.end(),
+            gas_data.begin());
+    if (std::distance(std::get<0>(shifted), oil_data.end()) < 3)
         return;
 
     auto oil_decline =
         dca::best_from_interval_volume<dca::arps_hyperbolic>(
-            peak_oil, oil_data.end(), 0, 1.0 / 12.0);
+            std::get<0>(shifted), oil_data.end(), 0, 1.0 / 12.0);
 
     double t_eur;
     auto oil_eur = dca::eur(
@@ -152,17 +160,9 @@ void process_well(const dataset& data)
             &t_eur
     );
 
-    std::vector<double> gas_data(gas.size());
-    std::transform(gas.begin(), gas.end(), gas_data.begin(),
-            [](const std::string& d) {
-                return std::strtod(d.c_str(), nullptr);
-            });
-
     auto gas_decline =
         dca::best_from_interval_volume<dca::arps_hyperbolic>(
-            gas_data.begin() +
-              std::distance(oil_data.begin(), peak_oil),
-            gas_data.end(), 0, 1.0 / 12.0);
+            std::get<1>(shifted), gas_data.end(), 0, 1.0 / 12.0);
 
     auto gas_eur = dca::arps_hyperbolic_to_exponential(
             gas_decline.qi(),

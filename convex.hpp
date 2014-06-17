@@ -123,14 +123,30 @@ typename Simplex::value_type centroid(const Simplex& spx,
     return result;
 }
 
+template<class Fn, class Tuple>
+struct must_apply {
+    template<class FnDep = Fn>
+    static decltype(std::declval<FnDep>()(std::declval<Tuple>()),
+            std::false_type {})
+    must_apply_test(void*);
+
+    template<class = void>
+    static std::true_type must_apply_test(...);
+
+    using type = typename std::decay<decltype(must_apply_test(nullptr))>::type;
+
+    static const bool value = type::value;
+};
+
 }
 
 template<class... Params>
 using simplex =
     typename detail::simplex_traits<std::tuple<Params...>>::simplex_type;
 
-template<class Fn, class Simplex, class = decltype(std::declval<Fn>()(
-            std::declval<typename Simplex::value_type>()))>
+template<class Fn, class Simplex,
+    class = typename std::enable_if<!detail::must_apply<
+      Fn, typename Simplex::value_type>::value>::type>
 typename Simplex::value_type nelder_mead(
         Fn f,
         const Simplex& initial_simplex,
@@ -141,8 +157,10 @@ typename Simplex::value_type nelder_mead(
         double exp_factor = 2.0,
         double con_factor = 0.5);
 
-template<class Fn, class Simplex, class = void, class = decltype(tuple::apply(
-            std::declval<Fn>(), std::declval<typename Simplex::value_type>()))>
+template<class Fn, class Simplex,
+    class = typename std::enable_if<detail::must_apply<
+      Fn, typename Simplex::value_type>::value>::type,
+    class = void>
 typename Simplex::value_type nelder_mead(
         Fn f,
         const Simplex& initial_simplex,

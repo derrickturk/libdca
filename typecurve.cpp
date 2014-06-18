@@ -16,10 +16,13 @@
 
 namespace params {
 
-const std::string id_field = "PROPNUM";
-static const std::string oil_field = "OIL";
-static const std::string gas_field = "GAS";
+const std::string id_field = "UID";
+static const std::string oil_field = "Oil";
+static const std::string gas_field = "Gas";
 static const auto aggregation = dca::mean {};
+static const auto d_final = dca::decline<dca::tangent_effective>(0.05);
+static const double oil_el = 365.25;
+static const double max_time = 30;
 
 }
 
@@ -81,6 +84,9 @@ int main(int argc, char* argv[])
 
     double oil_avg_shift = 0;
     for (auto& oil_rec : oil) {
+        auto last_nz = oil_rec.end();
+        while (*--last_nz == 0);
+        oil_rec.erase(++last_nz, oil_rec.end());
         auto peak = dca::shift_to_peak(oil_rec.begin(), oil_rec.end());
         oil_avg_shift += std::distance(oil_rec.begin(), std::get<0>(peak));
         oil_rec.erase(oil_rec.begin(), std::get<0>(peak));
@@ -89,6 +95,9 @@ int main(int argc, char* argv[])
 
     double gas_avg_shift = 0;
     for (auto& gas_rec : gas) {
+        auto last_nz = gas_rec.end();
+        while (*--last_nz == 0);
+        gas_rec.erase(++last_nz, gas_rec.end());
         auto peak = dca::shift_to_peak(gas_rec.begin(), gas_rec.end());
         gas_avg_shift += std::distance(gas_rec.begin(), std::get<0>(peak));
         gas_rec.erase(gas_rec.begin(), std::get<0>(peak));
@@ -108,16 +117,36 @@ int main(int argc, char* argv[])
     auto gas_tc = dca::best_from_interval_volume<dca::arps_hyperbolic>(
             gas_tw.begin(), gas_tw.end(), 0, 1.0 / 12.0);
 
+    std::vector<double> oil_forecast;
+    double t = 1.0 / 12;
+    for (std::size_t i = 0; i < oil_tw.size(); ++i) {
+        oil_forecast.push_back(oil_tc.cumulative(t));
+        t += 1.0 /12;
+    }
+
+    for (std::size_t i = oil_forecast.size() - 1; i > 0; --i)
+        oil_forecast[i] -= oil_forecast[i - 1];
+
+    std::vector<double> gas_forecast;
+    t = 1.0 / 12;
+    for (std::size_t i = 0; i < gas_tw.size(); ++i) {
+        gas_forecast.push_back(gas_tc.cumulative(t));
+        t += 1.0 /12;
+    }
+
+    for (std::size_t i = gas_forecast.size() - 1; i > 0; --i)
+        gas_forecast[i] -= gas_forecast[i - 1];
+
     double t_eur;
     double oil_eur = dca::eur(
             dca::arps_hyperbolic_to_exponential(
                 oil_tc.qi(),
                 oil_tc.Di(),
                 oil_tc.b(),
-                dca::decline<dca::tangent_effective>(0.05)
+                params::d_final
             ),
-            365.25, // bbl/yr = 1 bbl/day
-            30, // years,
+            params::oil_el, // bbl/yr = 1 bbl/day
+            params::max_time, // years,
             &t_eur
     );
 
@@ -125,13 +154,13 @@ int main(int argc, char* argv[])
             gas_tc.qi(),
             gas_tc.Di(),
             gas_tc.b(),
-            dca::decline<dca::tangent_effective>(0.05)
-            ).cumulative(t_eur - (gas_avg_shift - oil_avg_shift));
+            params::d_final
+    ).cumulative(t_eur - (gas_avg_shift - oil_avg_shift));
 
     std::cout << "Oil Avg. Shift: " << oil_avg_shift << " months\n";
-    std::cout << "Oil Type Well:\nMonth\tVolume (bbl)" << '\n';
+    std::cout << "Oil Type Well:\nMonth\tVolume (bbl)\tForecast (bbl)" << '\n';
     for (std::size_t i = 0; i < oil_tw.size(); ++i)
-        std::cout << i << '\t' <<  oil_tw[i] << '\n';
+        std::cout << i << '\t' <<  oil_tw[i] << '\t' << oil_forecast[i] << '\n';
     std::cout << "Oil TC: (qi = " << oil_tc.qi() / 365.25 << " bbl/d, Di = "
         << dca::convert_decline<dca::nominal, dca::secant_effective>(
                 oil_tc.Di(), oil_tc.b()) * 100 << " sec. %/yr, b = "
@@ -139,9 +168,9 @@ int main(int argc, char* argv[])
     std::cout << "Oil EUR: " << oil_eur / 1000 << " Mbbl\n";
 
     std::cout << "Gas Avg. Shift: " << gas_avg_shift << " months\n";
-    std::cout << "Gas Type Well:\nMonth\tVolume (mcf)" << '\n';
+    std::cout << "Gas Type Well:\nMonth\tVolume (mcf)\tForecast (mcf)" << '\n';
     for (std::size_t i = 0; i < gas_tw.size(); ++i)
-        std::cout << i << '\t' <<  gas_tw[i] << '\n';
+        std::cout << i << '\t' <<  gas_tw[i] << '\t' << gas_forecast[i] << '\n';
     std::cout << "Gas TC: (qi = " << gas_tc.qi() / 365.25 << " mcf/d, Di = "
         << dca::convert_decline<dca::nominal, dca::secant_effective>(
                 gas_tc.Di(), gas_tc.b()) * 100 << " sec. %/yr, b = "

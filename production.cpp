@@ -55,4 +55,11 @@ int main()
     std::cout << "\nMean:\n";
     for (const auto& p : type_well)
         std::cout << p << '\n';
+
+    dca::aggregate_production(prod.begin(), prod.end(),
+            type_well.begin(), 3, dca::percentile(0.25));
+
+    std::cout << "\nP25:\n";
+    for (const auto& p : type_well)
+        std::cout << p << '\n';
 }

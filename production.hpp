@@ -6,6 +6,8 @@
 #include <algorithm>
 #include <utility>
 #include <vector>
+#include <cmath>
+#include <stdexcept>
 
 namespace dca {
 
@@ -95,6 +97,29 @@ struct mean {
 
         return sum / count;
     }
+};
+
+class percentile {
+    public:
+        percentile(double pct) noexcept
+            : pct_(pct)
+        {
+            if (pct < 0.0 || pct >= 1.0)
+                throw std::out_of_range("Invalid percentile.");
+        }
+
+        template<class ProdIter>
+        double operator()(ProdIter begin, ProdIter end) const noexcept
+        {
+            std::vector<double> vals(begin, end);
+            std::sort(vals.begin(), vals.end());
+
+            return vals[static_cast<std::size_t>(
+                    std::floor(pct_ * vals.size()))];
+        }
+
+    private:
+        const double pct_;
 };
 
 }

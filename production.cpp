@@ -49,9 +49,10 @@ int main()
     };
     std::vector<double> type_well;
 
-    dca::aggregate_production<dca::mean>(prod.begin(), prod.end(),
-            std::back_inserter(type_well), 3);
+    dca::aggregate_production(prod.begin(), prod.end(),
+            std::back_inserter(type_well), 3, dca::mean {});
 
+    std::cout << "\nMean:\n";
     for (const auto& p : type_well)
         std::cout << p << '\n';
 }

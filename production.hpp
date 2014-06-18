@@ -50,7 +50,7 @@ shift_to_peak(RateIter major_begin, RateIter major_end,
 template<class AggFn, class ProdStreamIter, class OutIter>
 inline OutIter aggregate_production(
         ProdStreamIter prod_begin, ProdStreamIter prod_end, OutIter out,
-        std::size_t min_streams)
+        std::size_t min_streams, AggFn aggregate)
 {
     using std::begin;
     using std::end;
@@ -64,43 +64,37 @@ inline OutIter aggregate_production(
                 return std::make_pair(begin(cont), end(cont));
             });
 
+    std::vector<double> prod(streams.size());
     while (true) {
         std::size_t active_streams = 0;
-        AggFn aggregate;
 
         for (auto& stream : streams)
-            if (stream.first != stream.second) {
-                ++active_streams;
-                aggregate(*stream.first++);
-            }
+            if (stream.first != stream.second)
+                prod[active_streams++] = *stream.first++;
 
         if (active_streams < min_streams)
             break;
 
-        *out = aggregate();
+        *out++ = aggregate(prod.data(), prod.data() + active_streams);
     }
 
     return out;
 }
 
-class mean {
-    public:
-        mean() noexcept : sum_(0.0), count_(0) {}
+struct mean {
+    template<class ProdIter>
+    double operator()(ProdIter begin, ProdIter end) const noexcept
+    {
+        double sum = 0.0;
+        std::size_t count = 0;
 
-        void operator()(double x) noexcept
-        {
-            sum_ += x;
-            ++count_;
+        while (begin != end) {
+            sum += *begin++;
+            ++count;
         }
 
-        double operator()() const noexcept
-        {
-            return sum_ / count_;
-        }
-
-    private:
-        double sum_;
-        std::size_t count_;
+        return sum / count;
+    }
 };
 
 }

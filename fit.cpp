@@ -13,12 +13,23 @@
 #include "bestfit.hpp"
 #include "production.hpp"
 
+namespace params {
+const std::string id_field = "PROPNUM";
+static const std::string oil_field = "OIL";
+static const std::string gas_field = "GAS";
+static const auto aggregation = dca::mean {};
+static const auto d_final = dca::decline<dca::tangent_effective>(0.05);
+static const double oil_el = 365.25;
+static const double max_time = 30;
+}
+
 using dataset = std::unordered_map<std::string, std::vector<std::string>>;
 
 dataset read_delimited(std::istream& is, char delim = '\t');
 
 template<class F>
-F foreach_well(const dataset& data, F fn, std::string id_field = "PROPNUM");
+F foreach_well(const dataset& data, F fn,
+        std::string id_field = params::id_field);
 
 void process_well(const dataset& data);
 
@@ -54,7 +65,7 @@ int main(int argc, char* argv[])
         data = read_delimited(std::cin);
     }
 
-    std::cout << "PROPNUM\tOilEUR\tGasEUR\tOil.qi\tOil.Di\tOil.b\t"
+    std::cout << "PROPNUM\tOilEUR\tGasEUR\tBoeEUR\tOil.qi\tOil.Di\tOil.b\t"
         "Gas.qi\tGas.Di\tGas.b\n";
     foreach_well(data, process_well);
 }
@@ -119,12 +130,8 @@ F foreach_well(const dataset& data, F fn, std::string id_field)
 
 void process_well(const dataset& data)
 {
-    static const std::string id_field = "PROPNUM";
-    static const std::string oil_field = "OIL";
-    static const std::string gas_field = "GAS";
-
-    const auto& oil = data.at(oil_field);
-    const auto& gas = data.at(gas_field);
+    const auto& oil = data.at(params::oil_field);
+    const auto& gas = data.at(params::gas_field);
 
     std::vector<double> oil_data(oil.size());
     std::transform(oil.begin(), oil.end(), oil_data.begin(),
@@ -138,14 +145,13 @@ void process_well(const dataset& data)
                 return std::strtod(d.c_str(), nullptr);
             });
 
-    auto shifted = dca::shift_to_peak(oil_data.begin(), oil_data.end(),
-            gas_data.begin());
-    if (std::distance(std::get<0>(shifted), oil_data.end()) < 3)
+    auto shifted_oil = dca::shift_to_peak(oil_data.begin(), oil_data.end());
+    if (std::distance(std::get<0>(shifted_oil), oil_data.end()) < 3)
         return;
-
+    auto oil_shift = std::distance(oil_data.begin(), std::get<0>(shifted_oil));
     auto oil_decline =
         dca::best_from_interval_volume<dca::arps_hyperbolic>(
-            std::get<0>(shifted), oil_data.end(), 0, 1.0 / 12.0);
+            std::get<0>(shifted_oil), oil_data.end(), 0, 1.0 / 12.0);
 
     double t_eur;
     auto oil_eur = dca::eur(
@@ -153,27 +159,31 @@ void process_well(const dataset& data)
                 oil_decline.qi(),
                 oil_decline.Di(),
                 oil_decline.b(),
-                dca::decline<dca::tangent_effective>(0.05)
+                params::d_final
             ),
-            365.25, // bbl/yr = 1 bbl/day
-            30, // years,
+            params::oil_el, // bbl/yr = 1 bbl/day
+            params::max_time, // years,
             &t_eur
     );
 
+
+    auto shifted_gas = dca::shift_to_peak(gas_data.begin(), gas_data.end());
+    auto gas_shift = std::distance(gas_data.begin(), std::get<0>(shifted_gas));
     auto gas_decline =
         dca::best_from_interval_volume<dca::arps_hyperbolic>(
-            std::get<1>(shifted), gas_data.end(), 0, 1.0 / 12.0);
+            std::get<0>(shifted_gas), gas_data.end(), 0, 1.0 / 12.0);
 
     auto gas_eur = dca::arps_hyperbolic_to_exponential(
             gas_decline.qi(),
             gas_decline.Di(),
             gas_decline.b(),
-            dca::decline<dca::tangent_effective>(0.05)
-            ).cumulative(t_eur);
+            params::d_final
+            ).cumulative(t_eur - (gas_shift - oil_shift));
 
-    std::cout << data.at(id_field)[0] << '\t'
+    std::cout << data.at(params::id_field)[0] << '\t'
         << oil_eur << '\t'
         << gas_eur << '\t'
+        << (oil_eur + gas_eur / 6) << '\t'
         << oil_decline.qi() / 365.25 << '\t'
         << dca::convert_decline<dca::nominal, dca::secant_effective>(
                 oil_decline.Di(), oil_decline.b()) << '\t'

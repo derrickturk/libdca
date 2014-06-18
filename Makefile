@@ -3,6 +3,9 @@ CXXFLAGS=-std=c++11 -pedantic -Wall -Wextra -Werror -static
 CXXOPTFLAGS=-O2 -fno-rtti -msse3 -mfpmath=sse -ffast-math
 CONFIG=-DDCA_IOSTREAMS
 
+typecurve.exe: typecurve.cpp *.hpp
+	$(CXX) $(CXXFLAGS) $(CONFIG) $(CXXOPTFLAGS) -o typecurve typecurve.cpp
+
 fit.exe: fit.cpp decline.hpp exponential.hpp hyperbolic.hpp hyptoexp.hpp bestfit.hpp production.hpp
 	$(CXX) $(CXXFLAGS) $(CONFIG) $(CXXOPTFLAGS) -o fit fit.cpp
 

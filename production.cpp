@@ -2,6 +2,7 @@
 #include <iterator>
 #include <iostream>
 #include <cassert>
+#include <vector>
 
 int main()
 {
@@ -40,4 +41,17 @@ int main()
     auto multi = dca::shift_to_peak(begin(oil), end(oil),
             begin(gas), begin(gas), begin(gas));
     assert(std::get<3>(multi) == std::get<1>(multi));
+
+    std::vector<std::vector<double>> prod {
+        { 4000, 3000, 2000, 1000, 500, 100 },
+        { 1000,  750,  650,  500, 250,  50 },
+        { 2500, 2000, 1250,  750, 500,  75 }
+    };
+    std::vector<double> type_well;
+
+    dca::aggregate_production<dca::mean>(prod.begin(), prod.end(),
+            std::back_inserter(type_well), 3);
+
+    for (const auto& p : type_well)
+        std::cout << p << '\n';
 }

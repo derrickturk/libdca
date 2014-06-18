@@ -4,6 +4,8 @@
 #include <tuple>
 #include <iterator>
 #include <algorithm>
+#include <utility>
+#include <vector>
 
 namespace dca {
 
@@ -44,6 +46,62 @@ shift_to_peak(RateIter major_begin, RateIter major_end,
 
     return result;
 }
+
+template<class AggFn, class ProdStreamIter, class OutIter>
+inline OutIter aggregate_production(
+        ProdStreamIter prod_begin, ProdStreamIter prod_end, OutIter out,
+        std::size_t min_streams)
+{
+    using std::begin;
+    using std::end;
+    using prod_cont =
+        typename std::iterator_traits<ProdStreamIter>::value_type;
+    using prod_it = decltype(begin(std::declval<prod_cont>()));
+
+    std::vector<std::pair<prod_it, prod_it>> streams;
+    std::transform(prod_begin, prod_end, std::back_inserter(streams),
+            [](const prod_cont& cont) {
+                return std::make_pair(begin(cont), end(cont));
+            });
+
+    while (true) {
+        std::size_t active_streams = 0;
+        AggFn aggregate;
+
+        for (auto& stream : streams)
+            if (stream.first != stream.second) {
+                ++active_streams;
+                aggregate(*stream.first++);
+            }
+
+        if (active_streams < min_streams)
+            break;
+
+        *out = aggregate();
+    }
+
+    return out;
+}
+
+class mean {
+    public:
+        mean() noexcept : sum_(0.0), count_(0) {}
+
+        void operator()(double x) noexcept
+        {
+            sum_ += x;
+            ++count_;
+        }
+
+        double operator()() const noexcept
+        {
+            return sum_ / count_;
+        }
+
+    private:
+        double sum_;
+        std::size_t count_;
+};
 
 }
 

@@ -181,9 +181,9 @@ void process_well(const dataset& data)
             ).cumulative(t_eur - (gas_shift - oil_shift));
 
     std::cout << data.at(params::id_field)[0] << '\t'
-        << oil_eur << '\t'
-        << gas_eur << '\t'
-        << (oil_eur + gas_eur / 6) << '\t'
+        << oil_eur / 1000 << '\t'
+        << gas_eur / 1000 << '\t'
+        << (oil_eur + gas_eur / 6) / 1000 << '\t'
         << oil_decline.qi() / 365.25 << '\t'
         << dca::convert_decline<dca::nominal, dca::secant_effective>(
                 oil_decline.Di(), oil_decline.b()) << '\t'

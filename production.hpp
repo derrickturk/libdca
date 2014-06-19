@@ -49,24 +49,16 @@ shift_to_peak(RateIter major_begin, RateIter major_end,
     return result;
 }
 
-template<class AggFn, class ProdStreamIter, class OutIter>
+template<class AggFn, class ProdRangeIter, class OutIter,
+    class=decltype(std::declval<ProdRangeIter>()->first)>
 inline OutIter aggregate_production(
-        ProdStreamIter prod_begin, ProdStreamIter prod_end, OutIter out,
+        ProdRangeIter prod_begin, ProdRangeIter prod_end, OutIter out,
         std::size_t min_streams, AggFn aggregate)
 {
-    using std::begin;
-    using std::end;
-    using prod_cont =
-        typename std::iterator_traits<ProdStreamIter>::value_type;
-    using prod_it = decltype(begin(std::declval<prod_cont>()));
-
-    std::vector<std::pair<prod_it, prod_it>> streams;
-    std::transform(prod_begin, prod_end, std::back_inserter(streams),
-            [](const prod_cont& cont) {
-                return std::make_pair(begin(cont), end(cont));
-            });
-
+    std::vector<typename std::iterator_traits<ProdRangeIter>::value_type>
+        streams(prod_begin, prod_end);
     std::vector<double> prod(streams.size());
+
     while (true) {
         std::size_t active_streams = 0;
 
@@ -81,6 +73,29 @@ inline OutIter aggregate_production(
     }
 
     return out;
+}
+
+template<class AggFn, class ProdContIter, class OutIter,
+    class=typename std::iterator_traits<ProdContIter>::value_type::value_type,
+    class=void>
+inline OutIter aggregate_production(
+        ProdContIter prod_begin, ProdContIter prod_end, OutIter out,
+        std::size_t min_streams, AggFn aggregate)
+{
+    using std::begin;
+    using std::end;
+    using prod_cont =
+        typename std::iterator_traits<ProdContIter>::value_type;
+    using prod_it = decltype(begin(std::declval<prod_cont>()));
+
+    std::vector<std::pair<prod_it, prod_it>> streams;
+    std::transform(prod_begin, prod_end, std::back_inserter(streams),
+            [](const prod_cont& cont) {
+                return std::make_pair(begin(cont), end(cont));
+            });
+
+    return aggregate_production(streams.begin(), streams.end(), out,
+            min_streams, aggregate);
 }
 
 struct mean {

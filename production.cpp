@@ -62,4 +62,18 @@ int main()
     std::cout << "\nP25:\n";
     for (const auto& p : type_well)
         std::cout << p << '\n';
+
+    std::vector<std::pair<double*, double*>> prod2 {
+        std::make_pair(prod[0].data() + 1, prod[0].data() + 3),
+        std::make_pair(prod[1].data() + 1, prod[1].data() + 3),
+        std::make_pair(prod[2].data() + 1, prod[2].data() + 3)
+    };
+
+    type_well.clear();
+    dca::aggregate_production(prod2.begin(), prod2.end(),
+            std::back_inserter(type_well), 3, dca::mean {});
+
+    std::cout << "\nMean:\n";
+    for (const auto& p : type_well)
+        std::cout << p << '\n';
 }

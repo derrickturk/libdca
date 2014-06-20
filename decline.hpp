@@ -82,6 +82,20 @@ template<decline_rate Type> inline double decline(double D) noexcept
     return convert_decline<Type, nominal>(D);
 }
 
+template<class Decline, class OutIter>
+inline OutIter interval_volumes(const Decline& decline, OutIter out,
+        double time_begin, double time_step, std::size_t n)
+{
+    double cumulative = decline.cumulative(time_begin);
+    while (n--) {
+        time_begin += time_step;
+        double next = decline.cumulative(time_begin);
+        *out++ = next - cumulative;
+        cumulative = next;
+    }
+    return out;
+}
+
 template<class Decline>
 inline double eur(const Decline& decline, double economic_limit,
         double max_time = std::numeric_limits<double>::infinity(),

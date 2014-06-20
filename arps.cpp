@@ -71,4 +71,11 @@ int main()
         std::cout << "t = " << t << ", q = " << decline.rate(t) << ", Np = "
             << decline.cumulative(t) << '\n';
     std::cout << "EUR: " << dca::eur(decline, 1, 30) << '\n';
+
+    std::vector<double> intervals;
+    dca::interval_volumes(decline, std::back_inserter(intervals),
+            0, 1.0 / 12, 24);
+    std::cout << "Interval volumes:\n";
+    for (auto d: intervals)
+        std::cout << d << '\n';
 }

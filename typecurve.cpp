@@ -7,6 +7,7 @@
 #include <cstddef>
 #include <algorithm>
 #include <cstdlib>
+#include <functional>
 
 #include "exponential.hpp"
 #include "hyperbolic.hpp"
@@ -49,6 +50,8 @@ void for_delimited(I begin, I end, T delim, F fn)
 
 int main(int argc, char* argv[])
 {
+    using namespace std::placeholders;
+
     std::vector<std::string> args(argv, argv + argc);
     dataset data;
 
@@ -82,34 +85,44 @@ int main(int argc, char* argv[])
         );
     });
 
-    double oil_avg_shift = 0;
+    std::vector<std::pair<
+        std::vector<double>::iterator,
+        std::vector<double>::iterator>> oil_ranges;
+    double oil_avg_shift = 0.0;
     for (auto& oil_rec : oil) {
-        auto last_nz = oil_rec.end();
-        while (*--last_nz == 0);
-        oil_rec.erase(++last_nz, oil_rec.end());
-        auto peak = dca::shift_to_peak(oil_rec.begin(), oil_rec.end());
-        oil_avg_shift += std::distance(oil_rec.begin(), std::get<0>(peak));
-        oil_rec.erase(oil_rec.begin(), std::get<0>(peak));
+        oil_rec.erase(std::find_if(oil_rec.rbegin(), oil_rec.rend(),
+                    std::bind(std::not_equal_to<double> {}, 0.0, _1)).base(),
+                oil_rec.end());
+        oil_ranges.emplace_back(
+                std::get<0>(dca::shift_to_peak(oil_rec.begin(), oil_rec.end())),
+                oil_rec.end());
+        oil_avg_shift += std::distance(oil_rec.begin(),
+                oil_ranges.back().first);
     }
-    oil_avg_shift /= oil.size();
+    oil_avg_shift /= oil_ranges.size();
 
-    double gas_avg_shift = 0;
+    std::vector<std::pair<
+        std::vector<double>::iterator,
+        std::vector<double>::iterator>> gas_ranges;
+    double gas_avg_shift = 0.0;
     for (auto& gas_rec : gas) {
-        auto last_nz = gas_rec.end();
-        while (*--last_nz == 0);
-        gas_rec.erase(++last_nz, gas_rec.end());
-        auto peak = dca::shift_to_peak(gas_rec.begin(), gas_rec.end());
-        gas_avg_shift += std::distance(gas_rec.begin(), std::get<0>(peak));
-        gas_rec.erase(gas_rec.begin(), std::get<0>(peak));
+        gas_rec.erase(std::find_if(gas_rec.rbegin(), gas_rec.rend(),
+                    std::bind(std::not_equal_to<double> {}, 0.0, _1)).base(),
+                gas_rec.end());
+        gas_ranges.emplace_back(
+                std::get<0>(dca::shift_to_peak(gas_rec.begin(), gas_rec.end())),
+                gas_rec.end());
+        gas_avg_shift += std::distance(gas_rec.begin(),
+                gas_ranges.back().first);
     }
-    gas_avg_shift /= gas.size();
+    gas_avg_shift /= gas_ranges.size();
 
     std::vector<double> oil_tw, gas_tw;
-    dca::aggregate_production(oil.begin(), oil.end(),
-            std::back_inserter(oil_tw), std::floor(oil.size() / 3),
+    dca::aggregate_production(oil_ranges.begin(), oil_ranges.end(),
+            std::back_inserter(oil_tw), std::floor(oil_ranges.size() / 3),
             params::aggregation);
-    dca::aggregate_production(gas.begin(), gas.end(),
-            std::back_inserter(gas_tw), std::floor(gas.size() / 3),
+    dca::aggregate_production(gas_ranges.begin(), gas_ranges.end(),
+            std::back_inserter(gas_tw), std::floor(gas_ranges.size() / 3),
             params::aggregation);
 
     auto oil_tc = dca::best_from_interval_volume<dca::arps_hyperbolic>(
@@ -118,24 +131,12 @@ int main(int argc, char* argv[])
             gas_tw.begin(), gas_tw.end(), 0, 1.0 / 12.0);
 
     std::vector<double> oil_forecast;
-    double t = 1.0 / 12;
-    for (std::size_t i = 0; i < oil_tw.size(); ++i) {
-        oil_forecast.push_back(oil_tc.cumulative(t));
-        t += 1.0 /12;
-    }
-
-    for (std::size_t i = oil_forecast.size() - 1; i > 0; --i)
-        oil_forecast[i] -= oil_forecast[i - 1];
+    dca::interval_volumes(oil_tc, std::back_inserter(oil_forecast),
+            0.0, 1.0 / 12, oil_tw.size());
 
     std::vector<double> gas_forecast;
-    t = 1.0 / 12;
-    for (std::size_t i = 0; i < gas_tw.size(); ++i) {
-        gas_forecast.push_back(gas_tc.cumulative(t));
-        t += 1.0 /12;
-    }
-
-    for (std::size_t i = gas_forecast.size() - 1; i > 0; --i)
-        gas_forecast[i] -= gas_forecast[i - 1];
+    dca::interval_volumes(gas_tc, std::back_inserter(gas_forecast),
+            0.0, 1.0 / 12, gas_tw.size());
 
     double t_eur;
     double oil_eur = dca::eur(

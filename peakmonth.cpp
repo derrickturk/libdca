@@ -72,7 +72,8 @@ int main(int argc, char* argv[])
         data = read_delimited(std::cin);
     }
 
-    std::cout << "API\tName\tPeak Oil Month\tPeak Month Oil (bbl)\n";
+    std::cout << "API\tName\tPeak Oil Month\t"
+        "Peak Month Oil (bbl)\tPeak Oil Month Gas (mcf)\n";
     foreach_well(data, [&](const dataset& well) {
         auto&& oil_text = well.at(params::oil_field);
         std::vector<double> oil (oil_text.size());
@@ -80,13 +81,20 @@ int main(int argc, char* argv[])
             [](const std::string& s) { return std::strtod(s.c_str(), nullptr); }
         );
 
-        auto peak_oil = std::get<0>(
-            dca::shift_to_peak(oil.begin(), oil.end()));
+        auto&& gas_text = well.at(params::gas_field);
+        std::vector<double> gas (gas_text.size());
+        std::transform(gas_text.begin(), gas_text.end(), gas.begin(),
+            [](const std::string& s) { return std::strtod(s.c_str(), nullptr); }
+        );
+
+        auto peak = dca::shift_to_peak(oil.begin(), oil.end(), gas.begin());
 
         std::cout << well.at(params::api_field)[0] << '\t'
           << well.at(params::name_field)[0] << '\t'
-          << well.at(params::month_field)[std::distance(oil.begin(), peak_oil)]
-          << '\t' << *peak_oil << '\n';
+          << well.at(params::month_field)[
+               std::distance(oil.begin(), std::get<0>(peak))]
+          << '\t' << *std::get<0>(peak) << '\t'
+          << *std::get<1>(peak) << '\n';
     });
 }
 

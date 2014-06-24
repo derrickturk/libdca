@@ -1,12 +1,18 @@
 /*
  * Decline Curve Best Fit Technique Comparison
+ *
+ * dwt | terminus data science, LLC
+ *
+ * In this program, we will consider several techniques for fitting decline
+ * curves to well production data reported on a monthly basis.
+ *
+ * While we will work with Arps hyperbolic decline curves, the techniques
+ * and conclusions here are generally applicable.
  */
 
 #include <iostream>
 #include <vector>
 #include <cstddef>
-#include <random>
-#include <numeric>
 
 #include "exponential.hpp"
 #include "hyperbolic.hpp"

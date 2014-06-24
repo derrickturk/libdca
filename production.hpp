@@ -137,6 +137,18 @@ class percentile {
         const double pct_;
 };
 
+template<class OutIter, class Numeric>
+inline OutIter step_series(OutIter begin, OutIter end,
+        Numeric init, Numeric step)
+{
+    while (begin != end) {
+        *begin++ = init;
+        init += step;
+    }
+
+    return begin;
+}
+
 }
 
 #define PRODUCTION_HPP

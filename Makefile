@@ -1,7 +1,8 @@
 CXX=g++
 CXXFLAGS=-std=c++11 -pedantic -Wall -Wextra -Werror -static
 CXXOPTFLAGS=-O2 -fno-rtti -msse3 -mfpmath=sse -ffast-math
-CONFIG=-DDCA_IOSTREAMS
+CONFIG=
+#CONFIG=-DDCA_NO_IOSTREAMS
 
 typecurve.exe: typecurve.cpp *.hpp
 	$(CXX) $(CXXFLAGS) $(CONFIG) $(CXXOPTFLAGS) -o typecurve typecurve.cpp

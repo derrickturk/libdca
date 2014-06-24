@@ -1,5 +1,5 @@
 /*
- * Decline Curve Best Fit and Typecurve Aggregation Technique Comparison
+ * Decline Curve Best Fit Technique Comparison
  */
 
 #include <iostream>
@@ -8,16 +8,12 @@
 #include <random>
 #include <numeric>
 
-#define DCA_IOSTREAMS
-
 #include "exponential.hpp"
 #include "hyperbolic.hpp"
 #include "hyptoexp.hpp"
 #include "decline.hpp"
 #include "bestfit.hpp"
 #include "production.hpp"
-
-#undef DCA_IOSTREAMS
 
 const double year_days = 365.25;
 const double month_days = 30.4;

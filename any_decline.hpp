@@ -8,7 +8,7 @@
 #include <typeinfo>
 #endif
 #endif
-#ifdef DCA_IOSTREAMS
+#ifndef DCA_NO_IOSTREAMS
 #include <iostream>
 #endif
 
@@ -41,7 +41,7 @@ class any {
         double rate(double time) const;
         double cumulative(double time) const;
 
-#ifdef DCA_IOSTREAMS
+#ifndef DCA_NO_IOSTREAMS
         friend std::ostream& operator<<(std::ostream& os, const any& d);
 #endif
 
@@ -58,7 +58,7 @@ class any {
             virtual double rate(double time) const = 0;
             virtual double cumulative(double time) const = 0;
 
-#ifdef DCA_IOSTREAMS
+#ifndef DCA_NO_IOSTREAMS
             virtual std::ostream& stream_to(std::ostream& os) const = 0;
 #endif
 
@@ -94,7 +94,7 @@ class any {
                 return d_.cumulative(time);
             }
 
-#ifdef DCA_IOSTREAMS
+#ifndef DCA_NO_IOSTREAMS
             std::ostream& stream_to(std::ostream& os) const override
             {
                 return os << d_;
@@ -158,7 +158,7 @@ inline const std::type_info& any::type() const
 #endif
 #endif
 
-#ifdef DCA_IOSTREAMS
+#ifndef DCA_NO_IOSTREAMS
 inline std::ostream& operator<<(std::ostream& os, const any& d)
 {
     return d.impl_->stream_to(os);

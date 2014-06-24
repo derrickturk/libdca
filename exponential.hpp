@@ -56,7 +56,7 @@ inline double arps_exponential::cumulative(double time) const noexcept
     return qi_ / D_ * (1.0 - std::exp(-D_ * time));
 }
 
-#ifdef DCA_IOSTREAMS
+#ifndef DCA_NO_IOSTREAMS
 #include <iostream>
 inline std::ostream& operator<<(std::ostream& os, const arps_exponential& d)
 {

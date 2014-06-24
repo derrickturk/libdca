@@ -81,7 +81,7 @@ inline double arps_hyperbolic_to_exponential::D(double time) const noexcept
     return arps_exponential::D();
 }
 
-#ifdef DCA_IOSTREAMS
+#ifndef DCA_NO_IOSTREAMS
 #include <iostream>
 inline std::ostream& operator<<(std::ostream& os,
         const arps_hyperbolic_to_exponential& d)

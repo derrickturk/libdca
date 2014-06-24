@@ -19,6 +19,11 @@
 
 #undef DCA_IOSTREAMS
 
+const double year_days = 365.25;
+const double month_days = 30.4;
+
+const int forecast_years = 5;
+
 int main()
 {
     /*
@@ -29,7 +34,7 @@ int main()
      */
 
     auto true_decline = dca::arps_hyperbolic(
-            /* qi = */ 100 * 365.25, /* bbl/yr */
+            /* qi = */ 100 * year_days, /* bbl/yr */
             /* Di = */ dca::decline<dca::secant_effective>(0.75 /* % / yr */,
                  1.5),
             /* b = */ 1.5);
@@ -41,7 +46,7 @@ int main()
      * *instantaneous rate* data, and a series of *interval volume* data.
      */
 
-    std::vector<double> time(3 * 12);
+    std::vector<double> time(forecast_years * 12);
     dca::step_series(time.begin(), time.end(), 0.0, 1.0 / 12);
 
     std::vector<double> true_instantaneous(time.size());
@@ -56,7 +61,7 @@ int main()
     std::cout << "Data for true decline " << true_decline
         << "\nTime\tInstantaneous Rate (bbl/d)\tMonthly Volume (bbl)\n";
     for (std::size_t i = 0, sz = time.size(); i < sz; ++i)
-        std::cout << time[i] << '\t' << true_instantaneous[i] / 365.25 << '\t'
+        std::cout << time[i] << '\t' << true_instantaneous[i] / year_days << '\t'
             << true_interval[i] << '\n';
 
     /*
@@ -64,25 +69,23 @@ int main()
      * fall on the date of first production. Let's add a ramp-up period of
      * two months prior to the initiation of our hyperbolic decline.
      */
-
-    time.resize(8);
-    dca::step_series(time.begin(), time.end(), 0.0, 1.0 / 12);
-
     true_instantaneous.insert(true_instantaneous.begin(), {
-            25 /* bbl/d */ * 365.25,
-            50 /* bbl/d */ * 365.25
+            25 /* bbl/d */ * year_days,
+            50 /* bbl/d */ * year_days
         });
+    true_instantaneous.resize(time.size());
 
     true_interval.insert(true_interval.begin(), {
             1000 /* bbl */,
             2200 /* bbl */
         });
+    true_interval.resize(time.size());
 
     /* Now let's look at the data again. */
     std::cout << "\nData for true decline " << true_decline << " with ramp-up"
         << "\nTime\tInstantaneous Rate (bbl/d)\tMonthly Volume (bbl)\n";
     for (std::size_t i = 0, sz = time.size(); i < sz; ++i)
-        std::cout << time[i] << '\t' << true_instantaneous[i] / 365.25 << '\t'
+        std::cout << time[i] << '\t' << true_instantaneous[i] / year_days << '\t'
             << true_interval[i] << '\n';
 
     /*
@@ -150,27 +153,89 @@ int main()
     std::vector<double> true_monthly_avg(true_interval.size());
     std::transform(true_interval.begin(), true_interval.end(),
             true_monthly_avg.begin(),
-            [](double monthly) { return monthly / 30.4 * 365.25; });
+            [](double monthly) { return monthly / month_days * year_days; });
     auto fit_rate_from_average = dca::best_from_rate<dca::arps_hyperbolic>(
             true_monthly_avg.begin() + peak_shift,
             true_monthly_avg.begin() + peak_shift + 5,
-            time.begin() + peak_shift);
+            time.begin());
 
     /* How does that decline look? */
     std::cout << "\nFit avg. monthly as instantaneous out to peak+5"
         " with shift-to-peak: " << fit_rate_from_average << '\n';
 
     /*
+     * And what if we also neglect to shift everything to align to the peak rate?
+     */
+    auto fit_rate_from_average_no_shift = dca::best_from_rate<dca::arps_hyperbolic>(
+            true_monthly_avg.begin(), true_monthly_avg.begin() + peak_shift + 5,
+            time.begin());
+    std::cout << "\nFit avg. monthly as instantaneous out to peak+5"
+        " without shift-to-peak: " << fit_rate_from_average_no_shift << '\n';
+
+    /*
+     * We can see that a big problem with fitting as if monthly volumes
+     * were instantaneous rates is that we understate the true initial rate.
+     * What if we adjust the fit's q_i to try to better match? In this case,
+     * we'll assume that we know the true instantaneous peak rate from a
+     * well test.
+     */
+    dca::arps_hyperbolic fit_rate_adjust_qi(
+            true_instantaneous[peak_shift], /* use actual peak instantaneous */
+            fit_rate_from_average.Di(), /* retain other parameters */
+            fit_rate_from_average.b()
+    );
+    std::cout << "\nFit avg. monthly as instantaneous out to peak+5"
+        " with shift-to-peak and adjust qi: " << fit_rate_adjust_qi << '\n';
+
+    /*
+     * This looks a little better, but we are going to overshoot on
+     * on ultimate recovery because we've taken a too-shallow curve and
+     * lifted it to begin at a higher initial rate.
+     *
+     * One technique that might be incorrectly applied here is to
+     * attempt to iterate on the b exponent in order to match some
+     * "known" EUR value.
+     *
+     * In this case, we'll assume we know the true EUR, and adjust the
+     * b exponent for our qi-adjusted curve to achieve the same EUR.
+     */
+    auto true_eur = dca::eur(true_decline,
+            1.0 /* bbl/d */ * year_days,
+            30 /* years */);
+    auto new_b = std::get<0>(convex::nelder_mead([&](double b) {
+            try {
+                return std::pow(dca::eur(dca::arps_hyperbolic(
+                            fit_rate_adjust_qi.qi(), fit_rate_adjust_qi.Di(), b),
+                        1.0 * year_days, 30) - true_eur, 2);
+            } catch (...) {
+                return std::numeric_limits<double>::infinity();
+            }
+        }, convex::simplex<double> {
+            { std::make_tuple(0.0), std::make_tuple(100) }
+        }, 300));
+    dca::arps_hyperbolic fit_rate_adjust_qi_b(
+            fit_rate_adjust_qi.qi(),
+            fit_rate_adjust_qi.Di(),
+            new_b);
+    std::cout << "\nFit avg. monthly as instantaneous out to peak+5"
+        " with shift-to-peak and adjust qi and b: "
+        << fit_rate_adjust_qi_b << '\n';
+
+    /*
      * Let's compare these declines on an actual-vs-forecasted basis, out to
      * the end of the three year period.
+     *
+     * Regardless of how the curves were fit, we'll apply them beginning at
+     * the peak rate, for a more fair comparison of how they'd actually
+     * be used in forecasting.
      */
 
-    std::cout << "Time\tCase\tType\tRate\n";
+    std::cout << "\nTime\tCase\tType\tRate\n";
     for (std::size_t i = 0, sz = time.size(); i < sz; ++i) {
         std::cout << time[i] << "\tActual\tIntervalAvg\t"
-            << true_interval[i] / 30.4 << '\n';
+            << true_interval[i] / month_days << '\n';
         std::cout << time[i] << "\tActual\tInstantaneous\t"
-            << true_instantaneous[i] / 365.25 << '\n';
+            << true_instantaneous[i] / year_days << '\n';
     }
 
     std::vector<double> fit_interval(time.size());
@@ -181,19 +246,20 @@ int main()
             0, 1.0 / 12, time.size() - peak_shift);
     for (std::size_t i = 0, sz = time.size(); i < sz; ++i) {
         std::cout << time[i] << "\tIntervalFitShiftPeak\tIntervalAvg\t"
-            << fit_interval[i] / 30.4 << '\n';
+            << fit_interval[i] / month_days << '\n';
         std::cout << time[i] << "\tIntervalFitShiftPeak\tInstantaneous\t"
-            << fit_interval_with_shift.rate(time[i] - time[peak_shift]) / 365.25
+            << fit_interval_with_shift.rate(time[i] - time[peak_shift]) / year_days
             << '\n';
     }
 
     dca::interval_volumes(fit_interval_from_zero,
-            fit_interval.begin(), 0, 1.0 / 12, time.size());
+            fit_interval.begin() + peak_shift, 0, 1.0 / 12,
+            time.size() - peak_shift);
     for (std::size_t i = 0, sz = time.size(); i < sz; ++i) {
         std::cout << time[i] << "\tIntervalFitFromZero\tIntervalAvg\t"
-            << fit_interval[i] / 30.4 << '\n';
+            << fit_interval[i] / month_days << '\n';
         std::cout << time[i] << "\tIntervalFitFromZero\tInstantaneous\t"
-            << fit_interval_from_zero.rate(time[i]) / 365.25
+            << fit_interval_from_zero.rate(time[i] - time[peak_shift]) / year_days
             << '\n';
     }
 
@@ -202,9 +268,43 @@ int main()
             time.size() - peak_shift);
     for (std::size_t i = 0, sz = time.size(); i < sz; ++i) {
         std::cout << time[i] << "\tRateFitShiftPeak\tIntervalAvg\t"
-            << fit_interval[i] / 30.4 << '\n';
+            << fit_interval[i] / month_days << '\n';
         std::cout << time[i] << "\tRateFitShiftPeak\tInstantaneous\t"
-            << fit_rate_from_average.rate(time[i] - time[peak_shift]) / 365.25
+            << fit_rate_from_average.rate(time[i] - time[peak_shift]) / year_days
+            << '\n';
+    }
+
+    dca::interval_volumes(fit_rate_from_average_no_shift,
+            fit_interval.begin() + peak_shift, 0, 1.0 / 12,
+            time.size() - peak_shift);
+    for (std::size_t i = 0, sz = time.size(); i < sz; ++i) {
+        std::cout << time[i] << "\tRateFitFromZero\tIntervalAvg\t"
+            << fit_interval[i] / month_days << '\n';
+        std::cout << time[i] << "\tRateFitFromZero\tInstantaneous\t"
+            << fit_rate_from_average_no_shift.rate(
+                    time[i] - time[peak_shift]) / year_days
+            << '\n';
+    }
+
+    dca::interval_volumes(fit_rate_adjust_qi,
+            fit_interval.begin() + peak_shift, 0, 1.0 / 12,
+            time.size() - peak_shift);
+    for (std::size_t i = 0, sz = time.size(); i < sz; ++i) {
+        std::cout << time[i] << "\tRateFitAdjustQi\tIntervalAvg\t"
+            << fit_interval[i] / month_days << '\n';
+        std::cout << time[i] << "\tRateFitAdjustQi\tInstantaneous\t"
+            << fit_rate_adjust_qi.rate(time[i] - time[peak_shift]) / year_days
+            << '\n';
+    }
+
+    dca::interval_volumes(fit_rate_adjust_qi_b,
+            fit_interval.begin() + peak_shift, 0, 1.0 / 12,
+            time.size() - peak_shift);
+    for (std::size_t i = 0, sz = time.size(); i < sz; ++i) {
+        std::cout << time[i] << "\tRateFitAdjustQiB\tIntervalAvg\t"
+            << fit_interval[i] / month_days << '\n';
+        std::cout << time[i] << "\tRateFitAdjustQiB\tInstantaneous\t"
+            << fit_rate_adjust_qi_b.rate(time[i] - time[peak_shift]) / year_days
             << '\n';
     }
 

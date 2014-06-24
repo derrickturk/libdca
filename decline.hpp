@@ -77,9 +77,10 @@ double convert_decline<secant_effective, secant_effective>(double D, double)
     return D;
 }
 
-template<decline_rate Type> inline double decline(double D) noexcept
+template<decline_rate Type> inline double decline(double D, double b = 1.0)
+  noexcept
 {
-    return convert_decline<Type, nominal>(D);
+    return convert_decline<Type, nominal>(D, b);
 }
 
 template<class Decline, class OutIter>

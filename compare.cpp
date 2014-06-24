@@ -164,4 +164,48 @@ int main()
      * Let's compare these declines on an actual-vs-forecasted basis, out to
      * the end of the three year period.
      */
+
+    std::cout << "Time\tCase\tType\tRate\n";
+    for (std::size_t i = 0, sz = time.size(); i < sz; ++i) {
+        std::cout << time[i] << "\tActual\tIntervalAvg\t"
+            << true_interval[i] / 30.4 << '\n';
+        std::cout << time[i] << "\tActual\tInstantaneous\t"
+            << true_instantaneous[i] / 365.25 << '\n';
+    }
+
+    std::vector<double> fit_interval(time.size());
+
+    /* Leave ramp-up period at 0 */
+    dca::interval_volumes(fit_interval_with_shift,
+            fit_interval.begin() + peak_shift,
+            0, 1.0 / 12, time.size() - peak_shift);
+    for (std::size_t i = 0, sz = time.size(); i < sz; ++i) {
+        std::cout << time[i] << "\tIntervalFitShiftPeak\tIntervalAvg\t"
+            << fit_interval[i] / 30.4 << '\n';
+        std::cout << time[i] << "\tIntervalFitShiftPeak\tInstantaneous\t"
+            << fit_interval_with_shift.rate(time[i] - time[peak_shift]) / 365.25
+            << '\n';
+    }
+
+    dca::interval_volumes(fit_interval_from_zero,
+            fit_interval.begin(), 0, 1.0 / 12, time.size());
+    for (std::size_t i = 0, sz = time.size(); i < sz; ++i) {
+        std::cout << time[i] << "\tIntervalFitFromZero\tIntervalAvg\t"
+            << fit_interval[i] / 30.4 << '\n';
+        std::cout << time[i] << "\tIntervalFitFromZero\tInstantaneous\t"
+            << fit_interval_from_zero.rate(time[i]) / 365.25
+            << '\n';
+    }
+
+    dca::interval_volumes(fit_rate_from_average,
+            fit_interval.begin() + peak_shift, 0, 1.0 / 12,
+            time.size() - peak_shift);
+    for (std::size_t i = 0, sz = time.size(); i < sz; ++i) {
+        std::cout << time[i] << "\tRateFitShiftPeak\tIntervalAvg\t"
+            << fit_interval[i] / 30.4 << '\n';
+        std::cout << time[i] << "\tRateFitShiftPeak\tInstantaneous\t"
+            << fit_rate_from_average.rate(time[i] - time[peak_shift]) / 365.25
+            << '\n';
+    }
+
 }

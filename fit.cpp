@@ -14,9 +14,9 @@
 #include "production.hpp"
 
 namespace params {
-const std::string id_field = "PROPNUM";
-static const std::string oil_field = "OIL";
-static const std::string gas_field = "GAS";
+const std::string id_field = "UID";
+static const std::string oil_field = "Oil";
+static const std::string gas_field = "Gas";
 static const auto aggregation = dca::mean {};
 static const auto d_final = dca::decline<dca::tangent_effective>(0.05);
 static const double oil_el = 365.25;

@@ -16,6 +16,7 @@
 #include <cstddef>
 #include <random>
 #include <cmath>
+#include <iterator>
 
 #include "exponential.hpp"
 #include "hyperbolic.hpp"
@@ -28,6 +29,7 @@ const double year_days = 365.25;
 const double month_days = 30.4;
 
 const int forecast_years = 5;
+const int fit_months = 6;
 const unsigned n_wells = 100;
 
 int main()
@@ -60,16 +62,120 @@ int main()
                 b);
     }
 
-    for (const auto& decl: true_declines)
-        std::cout << decl << '\n';
-
     /*
-     * Now, let's generate three years worth of sample data using this decline.
-     * We'll generate a series of times from t = 0 (beginning of first month) to
-     * t = 2+11/12 (beginning of last month), as well as both a series of
-     * *instantaneous rate* data, and a series of *interval volume* data.
+     * Now, let's generate a suitable amount of (post-peak) data for each well.
      */
 
     std::vector<double> time(forecast_years * 12);
     dca::step_series(time.begin(), time.end(), 0.0, 1.0 / 12);
+
+    std::vector<std::vector<double>> rate(true_declines.size());
+    std::transform(true_declines.begin(), true_declines.end(), rate.begin(),
+            [&](const dca::arps_hyperbolic& decl) -> std::vector<double> {
+                std::vector<double> result(forecast_years * 12);
+                std::transform(time.begin(), time.end(), result.begin(),
+                    [&](double t) { return decl.rate(t); });
+                return result;
+            });
+
+    std::vector<std::vector<double>> production(true_declines.size());
+    std::transform(true_declines.begin(), true_declines.end(),
+            production.begin(),
+            [&](const dca::arps_hyperbolic& decl) -> std::vector<double> {
+                std::vector<double> result(forecast_years * 12);
+                dca::interval_volumes(decl, result.begin(), 0.0, 1.0 / 12,
+                    forecast_years * 12);
+                return result;
+            });
+
+    /*
+     * Having previously established the correctness of the technique, we'll
+     * apply an interval-volume shift-to-peak hyperbolic fit to each well,
+     * using only the first six months of data.
+     */
+
+    std::vector<dca::arps_hyperbolic> fit_declines;
+    std::vector<double> interval(6);
+    std::transform(production.begin(), production.end(),
+            std::back_inserter(fit_declines),
+            [&](const std::vector<double>& prod) {
+                return dca::best_from_interval_volume<dca::arps_hyperbolic>(
+                    prod.begin(), prod.begin() + fit_months, 0.0, 1.0 / 12);
+            });
+
+    /*
+     * We might attempt to use the average of each decline parameter in order
+     * to generate an "average decline."
+     */
+
+    double avg_qi = 0.0, avg_Di = 0.0, avg_b = 0.0;
+    for (const auto& decl : fit_declines) {
+        avg_qi += decl.qi();
+        avg_Di += decl.Di();
+        avg_b += decl.b();
+    }
+    avg_qi /= fit_declines.size();
+    avg_Di /= fit_declines.size();
+    avg_b /= fit_declines.size();
+
+    dca::arps_hyperbolic avg_params_decline(avg_qi, avg_Di, avg_b);
+
+    std::cerr << "Avg params decline: " << avg_params_decline << '\n';
+
+    /*
+     * That doesn't seem to match our known distributions very well. The better
+     * approach is to aggregate the average production across wells, then fit
+     * the desired decline curve model to the aggregate production.
+     */
+
+    std::vector<double> avg_rate;
+    dca::aggregate_production(rate.begin(), rate.end(),
+            std::back_inserter(avg_rate),
+            rate.size() / 2, /* until less than half of wells producing */
+            dca::mean {});
+
+    std::vector<double> avg_production;
+    dca::aggregate_production(production.begin(), production.end(),
+            std::back_inserter(avg_production),
+            production.size() / 2, /* until less than half of wells producing */
+            dca::mean {});
+
+    auto avg_prod_decline =
+        dca::best_from_interval_volume<dca::arps_hyperbolic>(
+            avg_production.begin(), avg_production.begin() + fit_months,
+            0.0, 1.0 / 12);
+
+    std::cerr << "Avg production decline: " << avg_prod_decline << '\n';
+
+    /*
+     * As you can see, there is a significant difference between the curves.
+     * Let's take a look.
+     */
+
+    std::cout << "\nTime\tCase\tType\tRate\n";
+    for (std::size_t i = 0, sz = time.size(); i < sz; ++i) {
+        std::cout << time[i] << "\tActualAvg\tIntervalAvg\t"
+            << avg_production[i] / month_days << '\n';
+        std::cout << time[i] << "\tActualAvg\tInstantaneous\t"
+            << avg_rate[i] / year_days << '\n';
+    }
+
+    std::vector<double> fit_interval(time.size());
+    std::vector<std::pair<const char*, const dca::arps_hyperbolic*>> declines {
+        { "AvgParams", &avg_params_decline },
+        { "AvgProd", &avg_prod_decline }
+    };
+
+    for (const auto& decline : declines) {
+        /* Leave ramp-up period at 0 */
+        dca::interval_volumes(*decline.second,
+                fit_interval.begin(), 0, 1.0 / 12, time.size());
+
+        for (std::size_t i = 0, sz = time.size(); i < sz; ++i) {
+            std::cout << time[i] << '\t' << decline.first << "\tIntervalAvg\t"
+                << fit_interval[i] / month_days << '\n';
+            std::cout << time[i] << '\t' << decline.first << "\tInstantaneous\t"
+                << decline.second->rate(time[i]) / year_days << '\n';
+        }
+    }
 }

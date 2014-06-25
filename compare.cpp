@@ -248,7 +248,7 @@ int main()
      * be used in forecasting.
      */
 
-    std::cout << "\nTime\tCase\tType\tRate\tEUR\n";
+    std::cout << "Time\tCase\tType\tRate\tEUR\n";
     for (std::size_t i = 0, sz = time.size(); i < sz; ++i) {
         std::cout << time[i] << "\tActual\tIntervalAvg\t"
             << true_interval[i] / month_days << '\t' << true_eur << '\n';

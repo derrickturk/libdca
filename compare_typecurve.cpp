@@ -17,6 +17,7 @@
 #include <random>
 #include <cmath>
 #include <iterator>
+#include <numeric>
 
 #include "exponential.hpp"
 #include "hyperbolic.hpp"
@@ -89,6 +90,28 @@ int main()
             });
 
     /*
+     * We'll also calculate EURs and 3-year cumulatives per well, for future
+     * comparison to typecurve results.
+     */
+    std::vector<double> true_eur(true_declines.size()),
+        true_3_cum(true_declines.size());
+    std::transform(true_declines.begin(), true_declines.end(),
+            true_eur.begin(), [](const dca::arps_hyperbolic& decl) {
+                return dca::eur(decl, 1.0 * year_days, 30);
+            });
+    std::transform(true_declines.begin(), true_declines.end(),
+            true_3_cum.begin(), [](const dca::arps_hyperbolic& decl) {
+                return decl.cumulative(3.0);
+            });
+    double true_avg_eur = std::accumulate(true_eur.begin(), true_eur.end(),
+            0.0) / true_eur.size(),
+           true_avg_3_cum = std::accumulate(true_3_cum.begin(),
+                   true_3_cum.end(), 0.0) / true_3_cum.size();
+
+    std::cerr << "Avg of EUR = " << true_avg_eur / 1000 << " Mbbl.\n"
+        << "Avg of 3-year cum. = " << true_avg_3_cum / 1000 << " Mbbl.\n";
+
+    /*
      * Having previously established the correctness of the technique, we'll
      * apply an interval-volume shift-to-peak hyperbolic fit to each well,
      * using only the first six months of data.
@@ -121,6 +144,10 @@ int main()
     dca::arps_hyperbolic avg_params_decline(avg_qi, avg_Di, avg_b);
 
     std::cerr << "Avg params decline: " << avg_params_decline << '\n';
+    std::cerr << "EUR = "
+        << dca::eur(avg_params_decline, 1.0 * year_days, 30) / 1000
+        << " Mbbl.\n" << "3-year cum. = "
+        << avg_params_decline.cumulative(3) / 1000 << " Mbbl.\n";
 
     /*
      * That doesn't seem to match our known distributions very well. The better
@@ -146,13 +173,17 @@ int main()
             0.0, 1.0 / 12);
 
     std::cerr << "Avg production decline: " << avg_prod_decline << '\n';
+    std::cerr << "EUR = "
+        << dca::eur(avg_prod_decline, 1.0 * year_days, 30) / 1000
+        << " Mbbl.\n" << "3-year cum. = "
+        << avg_prod_decline.cumulative(3) / 1000 << " Mbbl.\n";
 
     /*
      * As you can see, there is a significant difference between the curves.
      * Let's take a look.
      */
 
-    std::cout << "\nTime\tCase\tType\tRate\n";
+    std::cout << "Time\tCase\tType\tRate\n";
     for (std::size_t i = 0, sz = time.size(); i < sz; ++i) {
         std::cout << time[i] << "\tActualAvg\tIntervalAvg\t"
             << avg_production[i] / month_days << '\n';

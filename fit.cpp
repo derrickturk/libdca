@@ -14,7 +14,7 @@
 #include "production.hpp"
 
 namespace params {
-const std::string id_field = "UID";
+const std::string id_field = "Name";
 static const std::string oil_field = "Oil";
 static const std::string gas_field = "Gas";
 static const auto aggregation = dca::mean {};
@@ -65,8 +65,9 @@ int main(int argc, char* argv[])
         data = read_delimited(std::cin);
     }
 
-    std::cout << "PROPNUM\tOilEUR\tGasEUR\tBoeEUR\tOil.qi\tOil.Di\tOil.b\t"
-        "Gas.qi\tGas.Di\tGas.b\n";
+    std::cout << params::id_field << '\t'
+        << "OilEUR\tGasEUR\tBoeEUR\tOil.qi\tOil.Di\tOil.b\tOil.shift\t"
+           "Gas.qi\tGas.Di\tGas.b\tGas.shift\n";
     foreach_well(data, process_well);
 }
 
@@ -145,6 +146,15 @@ void process_well(const dataset& data)
                 return std::strtod(d.c_str(), nullptr);
             });
 
+    // strip leading zeros
+    oil_data.erase(oil_data.begin(),
+            std::find_if(oil_data.begin(), oil_data.end(),
+                [](double p) { return p > 0.0; }));
+
+    gas_data.erase(gas_data.begin(),
+            std::find_if(gas_data.begin(), gas_data.end(),
+                [](double p) { return p > 0.0; }));
+
     auto shifted_oil = dca::shift_to_peak(oil_data.begin(), oil_data.end());
     if (std::distance(std::get<0>(shifted_oil), oil_data.end()) < 3)
         return;
@@ -188,8 +198,10 @@ void process_well(const dataset& data)
         << dca::convert_decline<dca::nominal, dca::secant_effective>(
                 oil_decline.Di(), oil_decline.b()) << '\t'
         << oil_decline.b() << '\t'
+        << oil_shift << '\t'
         << gas_decline.qi() / 365.25 << '\t'
         << dca::convert_decline<dca::nominal, dca::secant_effective>(
                 gas_decline.Di(), gas_decline.b()) << '\t'
-        << gas_decline.b() << '\n';
+        << gas_decline.b() << '\t'
+        << gas_shift << '\n';
 }

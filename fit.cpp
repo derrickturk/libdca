@@ -17,7 +17,6 @@ namespace params {
 const std::string id_field = "Name";
 static const std::string oil_field = "Oil";
 static const std::string gas_field = "Gas";
-static const auto aggregation = dca::mean {};
 static const auto d_final = dca::decline<dca::tangent_effective>(0.05);
 static const double oil_el = 365.25;
 static const double max_time = 30;
@@ -175,7 +174,6 @@ void process_well(const dataset& data)
             params::max_time, // years,
             &t_eur
     );
-
 
     auto shifted_gas = dca::shift_to_peak(gas_data.begin(), gas_data.end());
     auto gas_shift = std::distance(gas_data.begin(), std::get<0>(shifted_gas));

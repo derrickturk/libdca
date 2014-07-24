@@ -7,8 +7,8 @@ CXXFLAGS=-std=c++11 -pedantic -Wall -Wextra -Werror $(CXXOPTFLAGS)
 INCLUDEDIR=include
 LDFLAGS=-static
 
-TESTINCLUDE=
-TESTLIB=-Wl,-Bstatic -lboost_unit_test_framework
+BOOSTINCLUDE=
+BOOSTTESTLINK=-Wl,-Bstatic -lboost_unit_test_framework
 
 CONFIG=
 #CONFIG=-DDCA_NO_IOSTREAMS
@@ -16,13 +16,16 @@ CONFIG=
 # Mac OS X is a nightmarish hellscape, so hold on to your butts
 
 ifeq ($(OS),Windows_NT)
-    # we're hosed anyway
+    CLEAN=clean-win
+    BOOSTINCLUDE=-IC:/boost
+    BOOSTTESTLINK =-LC:/boost/stage/lib -Wl,-Bstatic -lboost_unit_test_framework-mgw48-mt-1_55
 else
+    CLEAN=clean-unix
     UNAME_S := $(shell uname -s)
     ifeq ($(UNAME_S),Darwin)
         LDFLAGS=
-        TESTINCLUDE=/opt/local/include
-        TESTLIB=/opt/local/lib/libboost_unit_test_framework-mt.a
+        BOOSTINCLUDE=-I/opt/local/include
+        BOOSTTESTLINK=/opt/local/lib/libboost_unit_test_framework-mt.a
     endif
 endif
 
@@ -52,7 +55,14 @@ tests: $(TESTS)
 
 # rtti mandatory for boost.test
 $(TESTS): %: %.cpp $(INCLUDES)
-	$(CXX) -I$(INCLUDEDIR) -I$(TESTINCLUDE) $(CXXFLAGS) -o $@ $< $(LDFLAGS) $(TESTLIB)
+	$(CXX) -I$(INCLUDEDIR) $(BOOSTINCLUDE) $(CXXFLAGS) -o $@ $< $(LDFLAGS) $(BOOSTTESTLINK)
 
-clean:
-	-rm *.o *.a
+clean: $(CLEAN)
+
+clean-unix:
+	-rm $(TESTS)
+	-rm $(EXAMPLES)
+
+clean-win:
+	-rm tests/*.exe
+	-rm examples/*.exe

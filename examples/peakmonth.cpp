@@ -23,10 +23,7 @@ static const std::string gas_field = "Gas";
 static const std::string month_field = "Month";
 static const std::string api_field = "API";
 static const std::string name_field = "Name";
-static const auto aggregation = dca::mean {};
 static const auto d_final = dca::decline<dca::tangent_effective>(0.05);
-static const double oil_el = 365.25;
-static const double max_time = 30;
 
 }
 

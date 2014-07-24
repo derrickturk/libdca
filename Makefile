@@ -1,29 +1,30 @@
-CXX=g++
-CXXFLAGS=-std=c++11 -pedantic -Wall -Wextra -Werror -static
+CXX?=g++
+CXXFLAGS=-std=c++11 -pedantic -Wall -Wextra -Werror
 CXXOPTFLAGS=-O2 -fno-rtti -msse3 -mfpmath=sse -ffast-math
+LDFLAGS=-static
+INCLUDEDIR=include
 CONFIG=
 #CONFIG=-DDCA_NO_IOSTREAMS
 
-typecurve.exe: typecurve.cpp *.hpp
-	$(CXX) $(CXXFLAGS) $(CONFIG) $(CXXOPTFLAGS) -o typecurve typecurve.cpp
+.SUFFIXES:
 
-peakmonth.exe: peakmonth.cpp *.hpp
-	$(CXX) $(CXXFLAGS) $(CONFIG) $(CXXOPTFLAGS) -o peakmonth peakmonth.cpp
+INCLUDES=\
+	$(INCLUDEDIR)/dca/any_decline.hpp \
+	$(INCLUDEDIR)/dca/bestfit.hpp \
+	$(INCLUDEDIR)/dca/convex.hpp \
+	$(INCLUDEDIR)/dca/decline.hpp \
+	$(INCLUDEDIR)/dca/exponential.hpp \
+	$(INCLUDEDIR)/dca/hyperbolic.hpp \
+	$(INCLUDEDIR)/dca/hyptoexp.hpp \
+	$(INCLUDEDIR)/dca/production.hpp \
+	$(INCLUDEDIR)/dca/tuple_tools.hpp
 
-fit.exe: fit.cpp decline.hpp exponential.hpp hyperbolic.hpp hyptoexp.hpp bestfit.hpp production.hpp
-	$(CXX) $(CXXFLAGS) $(CONFIG) $(CXXOPTFLAGS) -o fit fit.cpp
+EXAMPLES := $(patsubst %.cpp,%,$(wildcard examples/*.cpp))
 
-arps.exe: arps.cpp decline.hpp exponential.hpp hyperbolic.hpp hyptoexp.hpp bestfit.hpp any_decline.hpp
-	$(CXX) $(CXXFLAGS) $(CONFIG) $(CXXOPTFLAGS) -o arps arps.cpp
+examples: $(EXAMPLES)
 
-bestfit.o: bestfit.cpp bestfit.hpp
-	$(CXX) $(CXXFLAGS) $(CONFIG) $(CXXOPTFLAGS) -c bestfit.cpp
-
-convex.exe: convex.cpp convex.hpp
-	$(CXX) $(CXXFLAGS) $(CONFIG) $(CXXOPTFLAGS) -o convex convex.cpp
-
-production.exe: production.cpp production.hpp
-	$(CXX) $(CXXFLAGS) $(CONFIG) $(CXXOPTFLAGS) -o production production.cpp
+$(EXAMPLES): %: %.cpp $(INCLUDES)
+	$(CXX) -I$(INCLUDEDIR) $(CXXFLAGS) $(CXXOPTFLAGS) -o $@ $< $(LDFLAGS)
 
 clean:
-	-rm *.exe *.o *.a
+	-rm *.o *.a

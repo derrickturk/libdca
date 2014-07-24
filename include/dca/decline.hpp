@@ -30,13 +30,13 @@ double convert_decline<nominal, secant_effective>(double D, double b) noexcept
 template<> inline
 double convert_decline<nominal, tangent_effective>(double D, double) noexcept
 {
-    return 1.0 - std::exp(-D);
+    return -std::expm1(-D);
 }
 
 template<> inline
 double convert_decline<tangent_effective, nominal>(double D, double) noexcept
 {
-    return -std::log(1.0 - D);
+    return -std::log1p(-D);
 }
 
 template<> inline

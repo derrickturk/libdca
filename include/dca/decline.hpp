@@ -49,8 +49,8 @@ template<> inline
 double convert_decline<secant_effective, tangent_effective>(double D, double b)
   noexcept
 {
-    return convert_decline<nominal, secant_effective>(
-            convert_decline<tangent_effective, nominal>(D),
+    return convert_decline<nominal, tangent_effective>(
+            convert_decline<secant_effective, nominal>(D),
             b);
 }
 

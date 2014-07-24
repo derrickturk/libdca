@@ -8,6 +8,7 @@
 *.txt
 *.tsv
 tests/tuple_tools
+tests/decline
 examples/arps
 examples/compare
 examples/compare_typecurve

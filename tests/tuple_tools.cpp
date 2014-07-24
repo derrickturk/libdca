@@ -18,12 +18,12 @@ BOOST_AUTO_TEST_CASE( tuple_construct )
 {
     struct X {
         int x, y;
-        X(int a, b) : x(a), b(b) { }
+        X(int x, int y) : x(x), y(y) { }
     };
 
     struct Y {
         int x;
-        Y(int a) : x(a) { }
+        Y(int x) : x(x) { }
     };
 
     struct Z {
@@ -36,4 +36,5 @@ BOOST_AUTO_TEST_CASE( tuple_construct )
 
     BOOST_CHECK(x.x == 1 && x.y == 2);
     BOOST_CHECK(y.x == 1);
+    static_cast<void>(z);
 }

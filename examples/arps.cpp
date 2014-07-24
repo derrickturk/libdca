@@ -1,10 +1,10 @@
 #include <iostream>
 #include <vector>
-#include "exponential.hpp"
-#include "hyperbolic.hpp"
-#include "hyptoexp.hpp"
-#include "bestfit.hpp"
-#include "any_decline.hpp"
+#include "dca/exponential.hpp"
+#include "dca/hyperbolic.hpp"
+#include "dca/hyptoexp.hpp"
+#include "dca/bestfit.hpp"
+#include "dca/any_decline.hpp"
 
 int main()
 {

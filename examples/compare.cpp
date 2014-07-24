@@ -14,12 +14,12 @@
 #include <vector>
 #include <cstddef>
 
-#include "exponential.hpp"
-#include "hyperbolic.hpp"
-#include "hyptoexp.hpp"
-#include "decline.hpp"
-#include "bestfit.hpp"
-#include "production.hpp"
+#include "dca/exponential.hpp"
+#include "dca/hyperbolic.hpp"
+#include "dca/hyptoexp.hpp"
+#include "dca/decline.hpp"
+#include "dca/bestfit.hpp"
+#include "dca/production.hpp"
 
 const double year_days = 365.25;
 const double month_days = 30.4;

@@ -9,11 +9,11 @@
 #include <cstdlib>
 #include <functional>
 
-#include "exponential.hpp"
-#include "hyperbolic.hpp"
-#include "hyptoexp.hpp"
-#include "bestfit.hpp"
-#include "production.hpp"
+#include "dca/exponential.hpp"
+#include "dca/hyperbolic.hpp"
+#include "dca/hyptoexp.hpp"
+#include "dca/bestfit.hpp"
+#include "dca/production.hpp"
 
 namespace params {
 

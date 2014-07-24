@@ -7,4 +7,12 @@
 *.log
 *.txt
 *.tsv
-examples/*
+tests/tuple_tools
+examples/arps
+examples/compare
+examples/compare_typecurve
+examples/convex
+examples/fit
+examples/peakmonth
+examples/production
+examples/typecurve

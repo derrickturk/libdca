@@ -21,9 +21,16 @@ INCLUDES=\
 
 EXAMPLES := $(patsubst %.cpp,%,$(wildcard examples/*.cpp))
 
+TESTS := $(patsubst %.cpp,%,$(wildcard test/*.cpp))
+
 examples: $(EXAMPLES)
 
 $(EXAMPLES): %: %.cpp $(INCLUDES)
+	$(CXX) -I$(INCLUDEDIR) $(CXXFLAGS) $(CXXOPTFLAGS) -o $@ $< $(LDFLAGS)
+
+tests: $(TESTS)
+
+$(TESTS): %: %.cpp $(INCLUDES)
 	$(CXX) -I$(INCLUDEDIR) $(CXXFLAGS) $(CXXOPTFLAGS) -o $@ $< $(LDFLAGS)
 
 clean:

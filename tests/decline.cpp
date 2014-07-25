@@ -58,7 +58,28 @@ BOOST_AUTO_TEST_CASE( conversions )
             (convert_decline<secant_effective, secant_effective>(dsec, b)));
 
     // check potentially degenerate cases
+    // harmonic
     b = 1.0;
+
+    BOOST_CHECK_CLOSE(dtan,
+            (convert_decline<secant_effective, tangent_effective>(
+                convert_decline<tangent_effective, secant_effective>(
+                    dtan, b), b)),
+            tolerance_pct);
+
+    BOOST_CHECK_CLOSE(dsec,
+            (convert_decline<tangent_effective, secant_effective>(
+                convert_decline<secant_effective, tangent_effective>(
+                    dsec, b), b)),
+            tolerance_pct);
+
+    BOOST_CHECK_CLOSE(dsec,
+            (convert_decline<nominal, secant_effective>(
+                decline<secant_effective>(dsec, b), b)),
+            tolerance_pct);
+
+    // exponential
+    b = 0.0;
 
     BOOST_CHECK_CLOSE(dtan,
             (convert_decline<secant_effective, tangent_effective>(

@@ -68,9 +68,6 @@ double convert_decline<secant_effective, tangent_effective>(double D, double b)
     if (std::abs(b) < std::numeric_limits<double>::epsilon())
         return D;
 
-    if (std::abs(b - 1.0) < std::numeric_limits<double>::epsilon())
-        return 1.0 - std::exp(D / (D - 1.0));
-
     double dnom = convert_decline<secant_effective, nominal>(D, b);
     auto exp = arps_exponential(1.0, dnom);
     return 1.0 - exp.rate(1.0);
@@ -89,9 +86,6 @@ double convert_decline<tangent_effective, secant_effective>(double D, double b)
 {
     if (std::abs(b) < std::numeric_limits<double>::epsilon())
         return D;
-
-    if (std::abs(b - 1.0) < std::numeric_limits<double>::epsilon())
-        return std::log1p(-D) / (std::log1p(-D) - 1.0);
 
     double dnom = convert_decline<tangent_effective, nominal>(D);
     auto hyp = arps_hyperbolic(1.0, dnom, b);

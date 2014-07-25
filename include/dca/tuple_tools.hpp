@@ -1,4 +1,5 @@
 #ifndef TUPLE_TOOLS_HPP
+#define TUPLE_TOOLS_HPP
 
 #include <cstddef>
 #include <type_traits>
@@ -92,5 +93,4 @@ struct result_of<F(Tuple)>
 
 }
 
-#define TUPLE_TOOLS_HPP
 #endif

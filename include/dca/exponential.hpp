@@ -1,6 +1,6 @@
 #ifndef EXPONENTIAL_HPP
+#define EXPONENTIAL_HPP
 
-#include "decline.hpp"
 #include <stdexcept>
 #include <cmath>
 
@@ -67,5 +67,4 @@ inline std::ostream& operator<<(std::ostream& os, const arps_exponential& d)
 
 }
 
-#define EXPONENTIAL_HPP
 #endif

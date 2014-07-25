@@ -1,4 +1,5 @@
 #ifndef BESTFIT_HPP
+#define BESTFIT_HPP
 
 #include "exponential.hpp"
 #include "hyperbolic.hpp"
@@ -151,5 +152,4 @@ inline Decline best_from_interval_volume(
 
 }
 
-#define BESTFIT_HPP
 #endif

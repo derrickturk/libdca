@@ -1,4 +1,5 @@
 #ifndef ANY_DECLINE_HPP
+#define ANY_DECLINE_HPP
 
 #include <memory>
 #include <type_traits>
@@ -167,5 +168,4 @@ inline std::ostream& operator<<(std::ostream& os, const any& d)
 
 }
 
-#define ANY_DECLINE_HPP
 #endif

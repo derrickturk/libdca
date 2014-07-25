@@ -1,4 +1,5 @@
 #ifndef CONVEX_HPP
+#define CONVEX_HPP
 
 #include <tuple>
 #include <utility>
@@ -308,5 +309,4 @@ typename Simplex::value_type nelder_mead(
 
 }
 
-#define CONVEX_HPP
 #endif

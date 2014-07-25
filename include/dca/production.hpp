@@ -1,4 +1,5 @@
 #ifndef PRODUCTION_HPP
+#define PRODUCTION_HPP
 
 #include <cstddef>
 #include <tuple>
@@ -151,5 +152,4 @@ inline OutIter step_series(OutIter begin, OutIter end,
 
 }
 
-#define PRODUCTION_HPP
 #endif

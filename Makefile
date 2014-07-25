@@ -10,8 +10,8 @@ LDFLAGS=-static
 BOOSTINCLUDE=
 BOOSTTESTLINK=-Wl,-Bstatic -lboost_unit_test_framework
 
-CONFIG=
-#CONFIG=-DDCA_NO_IOSTREAMS
+#CONFIG=
+CONFIG=-DDCA_NO_IOSTREAMS
 
 # Mac OS X is a nightmarish hellscape, so hold on to your butts
 
@@ -49,13 +49,13 @@ TESTS := $(patsubst %.cpp,%,$(wildcard tests/*.cpp))
 examples: $(EXAMPLES)
 
 $(EXAMPLES): %: %.cpp $(INCLUDES)
-	$(CXX) -I$(INCLUDEDIR) $(CXXFLAGS) $(RTTI) -o $@ $< $(LDFLAGS)
+	$(CXX) -I$(INCLUDEDIR) $(CXXFLAGS) $(CONFIG) $(RTTI) -o $@ $< $(LDFLAGS)
 
 tests: $(TESTS)
 
 # rtti mandatory for boost.test
 $(TESTS): %: %.cpp $(INCLUDES)
-	$(CXX) -I$(INCLUDEDIR) $(BOOSTINCLUDE) $(CXXFLAGS) -o $@ $< $(LDFLAGS) $(BOOSTTESTLINK)
+	$(CXX) -I$(INCLUDEDIR) $(BOOSTINCLUDE) $(CXXFLAGS) $(CONFIG) -o $@ $< $(LDFLAGS) $(BOOSTTESTLINK)
 
 clean: $(CLEAN)
 

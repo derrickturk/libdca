@@ -1,6 +1,6 @@
 #ifndef HYPERBOLIC_HPP
+#define HYPERBOLIC_HPP
 
-#include "decline.hpp"
 #include "exponential.hpp"
 #include <stdexcept>
 #include <cmath>
@@ -104,5 +104,4 @@ inline std::ostream& operator<<(std::ostream& os, const arps_hyperbolic& d)
 
 }
 
-#define HYPERBOLIC_HPP
 #endif

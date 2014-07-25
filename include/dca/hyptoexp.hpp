@@ -1,6 +1,6 @@
 #ifndef HYP2EXP_HPP
+#define HYP2EXP_HPP
 
-#include "decline.hpp"
 #include "exponential.hpp"
 #include "hyperbolic.hpp"
 #include <stdexcept>
@@ -93,5 +93,4 @@ inline std::ostream& operator<<(std::ostream& os,
 
 }
 
-#define HYP2EXP_HPP
 #endif

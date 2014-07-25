@@ -24,19 +24,6 @@ double convert_decline<nominal, nominal>(double D, double) noexcept
 }
 
 template<> inline
-double convert_decline<nominal, secant_effective>(double D, double b) noexcept
-{
-    /*
-     * was: 1.0 - std::pow(b * D + 1.0, -1.0 / b)
-     *
-     * recall:
-     *     log(b^e) = e * log(b)
-     */
-
-    return 1.0 - std::exp(-std::log1p(b * D) / b);
-}
-
-template<> inline
 double convert_decline<nominal, tangent_effective>(double D, double) noexcept
 {
     return -std::expm1(-D);
@@ -49,15 +36,33 @@ double convert_decline<tangent_effective, nominal>(double D, double) noexcept
 }
 
 template<> inline
+double convert_decline<nominal, secant_effective>(double D, double b) noexcept
+{
+    if (std::abs(b) < std::numeric_limits<double>::epsilon())
+        return convert_decline<nominal, tangent_effective>(D);
+
+    /*
+     * was: 1.0 - std::pow(b * D + 1.0, -1.0 / b)
+     *
+     * recall:
+     *     log(b^e) = e * log(b)
+     */
+
+    return 1.0 - std::exp(-std::log1p(b * D) / b);
+}
+
+template<> inline
 double convert_decline<secant_effective, nominal>(double D, double b) noexcept
 {
+    if (std::abs(b) < std::numeric_limits<double>::epsilon())
+        return convert_decline<tangent_effective, nominal>(D);
+
     /*
      * was: (std::pow(1.0 - D, -b) - 1.0) / b
      *
      * recall:
      *     log(b^e) = e * log(b)
      */
-
     return (std::exp(-b * std::log1p(-D)) - 1.0) / b;
 }
 

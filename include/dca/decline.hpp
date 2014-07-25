@@ -70,9 +70,6 @@ template<> inline
 double convert_decline<secant_effective, tangent_effective>(double D, double b)
   noexcept
 {
-    if (std::abs(b) < std::numeric_limits<double>::epsilon())
-        return D;
-
     double dnom = convert_decline<secant_effective, nominal>(D, b);
     auto exp = arps_exponential(1.0, dnom);
     return 1.0 - exp.rate(1.0);
@@ -89,9 +86,6 @@ template<> inline
 double convert_decline<tangent_effective, secant_effective>(double D, double b)
   noexcept
 {
-    if (std::abs(b) < std::numeric_limits<double>::epsilon())
-        return D;
-
     double dnom = convert_decline<tangent_effective, nominal>(D);
     auto hyp = arps_hyperbolic(1.0, dnom, b);
     return 1.0 - hyp.rate(1.0);

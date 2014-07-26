@@ -166,3 +166,15 @@ BOOST_AUTO_TEST_CASE( exponential )
 }
 
 BOOST_AUTO_TEST_SUITE_END()
+
+BOOST_AUTO_TEST_CASE( eur )
+{
+    dca::arps_exponential decl(1000,
+            dca::decline<dca::tangent_effective>(0.65));
+    double time, ultimate = dca::eur(decl, 1.0, 30.0, &time);
+    BOOST_CHECK_EQUAL(decl.cumulative(time), ultimate);
+    BOOST_CHECK_CLOSE(time, (dca::time_to_cumulative(decl, ultimate)),
+            tolerance_pct);
+    BOOST_CHECK_CLOSE(time, (dca::time_to_rate(decl, decl.rate(time))),
+            tolerance_pct);
+}

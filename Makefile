@@ -10,8 +10,8 @@ LDFLAGS=-static
 BOOSTINCLUDE=
 BOOSTTESTLINK=-Wl,-Bstatic -lboost_unit_test_framework
 
-#CONFIG=
-CONFIG=-DDCA_NO_IOSTREAMS
+CONFIG=
+#CONFIG=-DDCA_NO_IOSTREAMS
 
 # Mac OS X is a nightmarish hellscape, so hold on to your butts
 

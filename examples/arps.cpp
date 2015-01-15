@@ -1,5 +1,6 @@
 #include <iostream>
 #include <vector>
+#include "dca/decline.hpp"
 #include "dca/exponential.hpp"
 #include "dca/hyperbolic.hpp"
 #include "dca/hyptoexp.hpp"

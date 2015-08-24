@@ -24,7 +24,6 @@ static const std::string gas_field = "Gas";
 static const std::string month_field = "Month";
 static const std::string api_field = "API";
 static const std::string name_field = "Name";
-static const auto d_final = dca::decline<dca::tangent_effective>(0.05);
 
 }
 

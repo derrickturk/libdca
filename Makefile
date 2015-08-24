@@ -9,6 +9,7 @@ LDFLAGS=-static
 
 BOOSTINCLUDE=
 BOOSTTESTLINK=-Wl,-Bstatic -lboost_unit_test_framework
+BOOSTFLAGS=-Wno-deprecated-declarations
 
 CONFIG=
 #CONFIG=-DDCA_NO_IOSTREAMS
@@ -17,8 +18,8 @@ CONFIG=
 
 ifeq ($(OS),Windows_NT)
     CLEAN=clean-win
-    BOOSTINCLUDE=-IC:/boost
-    BOOSTTESTLINK =-LC:/boost/stage/lib -Wl,-Bstatic -lboost_unit_test_framework-mgw48-mt-1_55
+    BOOSTINCLUDE=-IC:/Users/Derrick/local/boost/boost_1_59_0
+    BOOSTTESTLINK=-LC:/Users/Derrick/local/boost/boost_1_59_0/stage/lib -Wl,-Bstatic -lboost_unit_test_framework-mgw51-mt-1_59
 else
     CLEAN=clean-unix
     UNAME_S := $(shell uname -s)
@@ -55,7 +56,7 @@ tests: $(TESTS)
 
 # rtti mandatory for boost.test
 $(TESTS): %: %.cpp $(INCLUDES)
-	$(CXX) -I$(INCLUDEDIR) $(BOOSTINCLUDE) $(CXXFLAGS) $(CONFIG) -o $@ $< $(LDFLAGS) $(BOOSTTESTLINK)
+	$(CXX) -I$(INCLUDEDIR) $(BOOSTINCLUDE) $(CXXFLAGS) $(BOOSTFLAGS) $(CONFIG) -o $@ $< $(LDFLAGS) $(BOOSTTESTLINK)
 
 clean: $(CLEAN)
 

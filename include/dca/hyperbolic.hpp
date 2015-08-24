@@ -4,6 +4,9 @@
 #include "exponential.hpp"
 #include <stdexcept>
 #include <cmath>
+#ifndef DCA_NO_IOSTREAMS
+#include <iostream>
+#endif
 
 namespace dca {
 
@@ -94,7 +97,6 @@ double arps_hyperbolic::harmonic_cumulative(double time) const noexcept
 }
 
 #ifndef DCA_NO_IOSTREAMS
-#include <iostream>
 inline std::ostream& operator<<(std::ostream& os, const arps_hyperbolic& d)
 {
     return os << "<Arps hyperbolic decline: (qi = " << d.qi() << ", Di = "

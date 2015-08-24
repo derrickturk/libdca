@@ -5,6 +5,9 @@
 #include "hyperbolic.hpp"
 #include <stdexcept>
 #include <cmath>
+#ifndef DCA_NO_IOSTREAMS
+#include <iostream>
+#endif
 
 namespace dca {
 
@@ -82,7 +85,6 @@ inline double arps_hyperbolic_to_exponential::D(double time) const noexcept
 }
 
 #ifndef DCA_NO_IOSTREAMS
-#include <iostream>
 inline std::ostream& operator<<(std::ostream& os,
         const arps_hyperbolic_to_exponential& d)
 {

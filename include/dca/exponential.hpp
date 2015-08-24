@@ -3,6 +3,9 @@
 
 #include <stdexcept>
 #include <cmath>
+#ifndef DCA_NO_IOSTREAMS
+#include <iostream>
+#endif
 
 namespace dca {
 
@@ -57,7 +60,6 @@ inline double arps_exponential::cumulative(double time) const noexcept
 }
 
 #ifndef DCA_NO_IOSTREAMS
-#include <iostream>
 inline std::ostream& operator<<(std::ostream& os, const arps_exponential& d)
 {
     return os << "<Arps exponential decline: (qi = " << d.qi() << ", D = "

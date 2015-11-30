@@ -2,7 +2,7 @@ CXX?=g++
 
 CXXOPTFLAGS=-O2 -msse3 -mfpmath=sse -ffast-math
 RTTI?=-fno-rtti
-CXXFLAGS=-std=c++11 -pedantic -Wall -Wextra -Werror $(CXXOPTFLAGS)
+CXXFLAGS=-std=c++14 -pedantic -Wall -Wextra -Werror $(CXXOPTFLAGS)
 
 INCLUDEDIR=include
 LDFLAGS=-static

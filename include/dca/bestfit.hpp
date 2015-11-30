@@ -70,8 +70,8 @@ struct decline_traits<arps_exponential> {
         return convex::simplex<double, double> {
             {
                 std::make_tuple(1, 0.01),
-                std::make_tuple(1e6, 5.0),
-                std::make_tuple(1e4, 2.3)
+                std::make_tuple(1e6, 0.5),
+                std::make_tuple(1e3, 10.0)
             }
         };
     }

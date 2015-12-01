@@ -83,10 +83,10 @@ struct decline_traits<arps_hyperbolic> {
     {
         return convex::simplex<double, double, double> {
             {
-                std::make_tuple(1, 0.01, 0.1),
-                std::make_tuple(1e4, 5.0, 5.0),
-                std::make_tuple(5e2, 2.3, 2.0),
-                std::make_tuple(50, 1.0, 0.75)
+                std::make_tuple(1, 0.01, 0.0),
+                std::make_tuple(1e6, 1.0, 0.0),
+                std::make_tuple(1e5, 10.0, 0.0),
+                std::make_tuple(1e4, 5.0, 3.0)
             }
         };
     }

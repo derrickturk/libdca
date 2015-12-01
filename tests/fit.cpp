@@ -50,12 +50,6 @@ BOOST_AUTO_TEST_CASE( exponential )
         auto fit = dca::best_from_rate<dca::arps_exponential>(
                 begin(projection.first), end(projection.first),
                 begin(projection.second));
-
-        /*
-        std::cerr << "Original decline: " << decl << '\n';
-        std::cerr << "Best fit: " << fit << '\n';
-        */
-
         BOOST_CHECK_CLOSE(decl.qi(), fit.qi(), tolerance_pct);
         BOOST_CHECK_CLOSE(decl.D(), fit.D(), tolerance_pct);
     }
@@ -64,6 +58,22 @@ BOOST_AUTO_TEST_CASE( exponential )
 BOOST_AUTO_TEST_CASE( hyperbolic )
 {
     std::mt19937 rng;
+
+    std::uniform_real_distribution<> qi_log_dist(0.0, 7.0);
+    std::uniform_real_distribution<> Di_tangent_dist(0.0, 1.0);
+    std::uniform_real_distribution<> b_dist(0.0, 2.5);
+    for (int i = 0; i < n_test; ++i) {
+        dca::arps_hyperbolic decl(std::pow(10.0, qi_log_dist(rng)),
+                dca::decline<dca::tangent_effective>(Di_tangent_dist(rng)),
+                b_dist(rng));
+        auto projection = forecast(decl, 0.0, 0.5, 100);
+        auto fit = dca::best_from_rate<dca::arps_hyperbolic>(
+                begin(projection.first), end(projection.first),
+                begin(projection.second));
+        BOOST_CHECK_CLOSE(decl.qi(), fit.qi(), tolerance_pct);
+        BOOST_CHECK_CLOSE(decl.Di(), fit.Di(), tolerance_pct);
+        BOOST_CHECK_CLOSE(decl.b(), fit.b(), tolerance_pct);
+    }
 }
 
 BOOST_AUTO_TEST_CASE( hyptoexp )

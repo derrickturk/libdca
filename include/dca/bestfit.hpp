@@ -103,7 +103,8 @@ struct decline_traits<arps_hyperbolic> {
     }
 
     template<class RateIter>
-    static std::pair<std::tuple<double, double>, std::tuple<double, double>>
+    static std::pair<std::tuple<double, double, double>,
+        std::tuple<double, double, double>>
     parameter_bounds_guess(RateIter rate_begin, RateIter rate_end)
     {
         double peak_rate = *std::max_element(rate_begin, rate_end);
@@ -131,7 +132,8 @@ struct decline_traits<arps_hyperbolic_to_exponential> {
     }
 
     template<class RateIter>
-    static std::pair<std::tuple<double, double>, std::tuple<double, double>>
+    static std::pair<std::tuple<double, double, double, double>,
+        std::tuple<double, double, double, double>>
     parameter_bounds_guess(RateIter rate_begin, RateIter rate_end)
     {
         double peak_rate = *std::max_element(rate_begin, rate_end);

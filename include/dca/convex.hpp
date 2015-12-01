@@ -124,6 +124,52 @@ typename Simplex::value_type centroid(const Simplex& spx,
     return result;
 }
 
+template<class Tuple, std::size_t I, class=void>
+struct inner_simplex_impl {
+    static void impl(
+            typename detail::simplex_traits<Tuple>::simplex_type& inner_simplex,
+            const Tuple& min, const Tuple& max)
+    {
+        inner_simplex[I] = inner_simplex[I - 1];
+        std::get<I - 1>(inner_simplex[I]) = std::get<I - 1>(max);
+        std::get<I - 2>(inner_simplex[I]) =
+            (std::get<I - 2>(max) + std::get<I - 2>(min)) / 2.0;
+        inner_simplex_impl<Tuple, I + 1>::impl(inner_simplex, min, max);
+    }
+};
+
+template<class Tuple, std::size_t I>
+struct inner_simplex_impl<Tuple, I,
+      std::enable_if_t<I == detail::simplex_traits<Tuple>::simplex_length>> {
+    static void impl(typename detail::simplex_traits<Tuple>::simplex_type&,
+            const Tuple&, const Tuple&)
+    {
+    }
+};
+
+template<class Tuple>
+struct inner_simplex_impl<Tuple, 0> {
+    static void impl(
+            typename detail::simplex_traits<Tuple>::simplex_type& inner_simplex,
+            const Tuple& min, const Tuple& max)
+    {
+        inner_simplex[0] = min;
+        inner_simplex_impl<Tuple, 1>::impl(inner_simplex, min, max);
+    }
+};
+
+template<class Tuple>
+struct inner_simplex_impl<Tuple, 1> {
+    static void impl(
+            typename detail::simplex_traits<Tuple>::simplex_type& inner_simplex,
+            const Tuple& min, const Tuple& max)
+    {
+        inner_simplex[1] = inner_simplex[0];
+        std::get<0>(inner_simplex[1]) = std::get<0>(max);
+        inner_simplex_impl<Tuple, 2>::impl(inner_simplex, min, max);
+    }
+};
+
 template<class Fn, class Tuple>
 struct must_apply {
     template<class FnDep = Fn>
@@ -144,6 +190,18 @@ struct must_apply {
 template<class... Params>
 using simplex =
     typename detail::simplex_traits<std::tuple<Params...>>::simplex_type;
+
+template<class... Params>
+typename detail::simplex_traits<std::tuple<Params...>>::simplex_type
+inner_simplex(const std::pair<std::tuple<Params...>,
+        std::tuple<Params...>>& limits)
+{
+    typename detail::simplex_traits<std::tuple<Params...>>::simplex_type
+        inner_simplex;
+    detail::inner_simplex_impl<std::tuple<Params...>, 0>::impl(inner_simplex,
+            limits.first, limits.second);
+    return inner_simplex;
+}
 
 template<class Fn, class Simplex,
     class = typename std::enable_if<!detail::must_apply<

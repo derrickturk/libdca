@@ -14,8 +14,6 @@
 #include <vector>
 #include <algorithm>
 
-#include <iostream>
-
 const double tolerance_pct = 1e-2;
 const int n_test = 100;
 

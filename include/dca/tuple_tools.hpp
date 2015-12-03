@@ -16,13 +16,7 @@ namespace detail {
 template<std::size_t N>
 struct apply_impl {
     template<class F, class Tuple, class... TParams>
-    static auto apply(F&& fn, Tuple&& t, TParams&&... args)
-      ->  decltype(
-              apply_impl<N - 1>::apply(
-                  std::forward<F>(fn), std::forward<Tuple>(t),
-                  std::get<N - 1>(std::forward<Tuple>(t)),
-                  std::forward<TParams>(args)...
-          ))
+    static decltype(auto) apply(F&& fn, Tuple&& t, TParams&&... args)
     {
         return apply_impl<N - 1>::apply(
                 std::forward<F>(fn), std::forward<Tuple>(t),
@@ -35,8 +29,7 @@ struct apply_impl {
 template<>
 struct apply_impl<0> {
     template<class F, class Tuple, class... TParams>
-    static auto apply(F&& fn, Tuple&&, TParams&&... args)
-      -> decltype(std::forward<F>(fn)(std::forward<TParams>(args)...))
+    static decltype(auto) apply(F&& fn, Tuple&&, TParams&&... args)
     {
         return std::forward<F>(fn)(std::forward<TParams>(args)...);
     }
@@ -96,10 +89,7 @@ struct streamto_impl<Tuple, Delim, 0>
 }
 
 template<class F, class Tuple>
-auto apply(F&& fn, Tuple&& t)
-  -> decltype(detail::apply_impl<
-          std::tuple_size<typename std::decay<Tuple>::type>::value
-        >::apply(std::forward<F>(fn), std::forward<Tuple>(t)))
+decltype(auto) apply(F&& fn, Tuple&& t)
 {
     return detail::apply_impl<
         std::tuple_size<typename std::decay<Tuple>::type>::value

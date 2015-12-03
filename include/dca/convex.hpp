@@ -180,7 +180,7 @@ struct must_apply {
     template<class = void>
     static std::true_type must_apply_test(...);
 
-    using type = typename std::decay<decltype(must_apply_test(nullptr))>::type;
+    using type = typename std::decay_t<decltype(must_apply_test(nullptr))>;
 
     static const bool value = type::value;
 };
@@ -204,8 +204,8 @@ inner_simplex(const std::pair<std::tuple<Params...>,
 }
 
 template<class Fn, class Simplex,
-    class = typename std::enable_if<!detail::must_apply<
-      Fn, typename Simplex::value_type>::value>::type>
+    class = typename std::enable_if_t<!detail::must_apply<
+      Fn, typename Simplex::value_type>::value>>
 typename Simplex::value_type nelder_mead(
         Fn f,
         const Simplex& initial_simplex,
@@ -218,8 +218,8 @@ typename Simplex::value_type nelder_mead(
         double shr_factor = 0.5);
 
 template<class Fn, class Simplex,
-    class = typename std::enable_if<detail::must_apply<
-      Fn, typename Simplex::value_type>::value>::type,
+    class = typename std::enable_if_t<detail::must_apply<
+      Fn, typename Simplex::value_type>::value>,
     class = void>
 typename Simplex::value_type nelder_mead(
         Fn f,
@@ -247,7 +247,7 @@ typename Simplex::value_type nelder_mead(
     using std::end;
 
     auto trial_simplex(initial_simplex);
-    std::array<typename std::result_of<Fn(typename Simplex::value_type)>::type,
+    std::array<typename std::result_of_t<Fn(typename Simplex::value_type)>,
         std::tuple_size<Simplex>::value> result;
     std::transform(begin(trial_simplex), end(trial_simplex), begin(result), f);
 

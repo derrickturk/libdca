@@ -57,6 +57,33 @@ struct construct_impl<0> {
     }
 };
 
+template<class Tuple, std::size_t... I>
+auto shuffle_left_construct(const Tuple& t, std::index_sequence<I...>)
+{
+    return std::make_tuple(std::get<I + 1>(t)..., std::get<0>(t));
+}
+
+template<class Tuple, std::size_t... I>
+auto shuffle_right_construct(const Tuple& t, std::index_sequence<I...>)
+{
+    return std::make_tuple(std::get<std::tuple_size<Tuple>::value - 1>(t),
+            std::get<I>(t)...);
+}
+
+template<class First, class... Params>
+auto shuffle_left_impl(const std::tuple<First, Params...>& tuple)
+{
+    return shuffle_left_construct(tuple,
+            std::make_index_sequence<sizeof...(Params)>());
+}
+
+template<class First, class... Params>
+auto shuffle_right_impl(const std::tuple<First, Params...>& tuple)
+{
+    return shuffle_right_construct(tuple,
+            std::make_index_sequence<sizeof...(Params)>());
+}
+
 #ifndef DCA_NO_IOSTREAMS
 template<class Tuple, char Delim, std::size_t I>
 struct streamto_impl {
@@ -86,7 +113,7 @@ struct streamto_impl<Tuple, Delim, 0>
 };
 #endif
 
-}
+} // namespace detail
 
 template<class F, class Tuple>
 decltype(auto) apply(F&& fn, Tuple&& t)
@@ -104,14 +131,29 @@ T construct(Tuple&& t)
       >::template construct<T>(std::forward<Tuple>(t));
 }
 
-template<class>
-struct result_of;
-
-template<class F, class Tuple>
-struct result_of<F(Tuple)>
+template<class... Params>
+auto shuffle_left(const std::tuple<Params...>& tuple)
 {
-    typedef decltype(apply(std::declval<F>(), std::declval<Tuple>())) type;
-};
+    return detail::shuffle_left_impl(tuple);
+}
+
+template<>
+auto shuffle_left(const std::tuple<>& tuple)
+{
+    return tuple;
+}
+
+template<class... Params>
+auto shuffle_right(const std::tuple<Params...>& tuple)
+{
+    return detail::shuffle_right_impl(tuple);
+}
+
+template<>
+auto shuffle_right(const std::tuple<>& tuple)
+{
+    return tuple;
+}
 
 #ifndef DCA_NO_IOSTREAMS
 template<class... Params, char Begin='(', char End=')', char Delim=','>
@@ -123,6 +165,18 @@ std::ostream& operator<<(std::ostream& os, const std::tuple<Params...>& tuple)
     return os << End;
 }
 #endif
+
+template<class>
+struct result_of;
+
+template<class F, class Tuple>
+struct result_of<F(Tuple)>
+{
+    typedef decltype(apply(std::declval<F>(), std::declval<Tuple>())) type;
+};
+
+template<class F, class Tuple>
+using result_of_t = typename result_of<F(Tuple)>::type;
 
 }
 

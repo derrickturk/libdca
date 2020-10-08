@@ -117,7 +117,7 @@ struct mean {
 
 class percentile {
     public:
-        percentile(double pct) noexcept
+        percentile(double pct)
             : pct_(pct)
         {
             if (pct < 0.0 || pct >= 1.0)
